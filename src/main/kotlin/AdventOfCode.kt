@@ -10,14 +10,17 @@ import kotlin.time.measureTimedValue
 @Suppress("unused")
 const val FAST_MODE = false
 
+val terminal = Terminal()
+
 @ExperimentalTime
 fun main() {
     verbose = false
-    val t = Terminal()
-    t.println(red("\n~~~ Advent Of Code Runner ~~~\n"))
-    val dayClasses = getAllDayClasses().sortedBy(::dayNumber)
-    val totalDuration = dayClasses.map { it.execute() }.reduceOrNull(Duration::plus)
-    println("\nTotal runtime: $totalDuration")
+    with(terminal) {
+        println(red("\n~~~ Advent Of Code Runner ~~~\n"))
+        val dayClasses = getAllDayClasses().sortedBy(::dayNumber)
+        val totalDuration = dayClasses.map { it.execute() }.reduceOrNull(Duration::plus)
+        println("\nTotal runtime: ${red("$totalDuration")}")
+    }
 }
 
 private fun getAllDayClasses(): Set<Class<out Day>> =
@@ -87,13 +90,12 @@ inline fun <reified T : Day> solve(
         create<T>().solve()
 }
 
-
 /**
  * Global flag to indicate verbosity or silence
  */
 var verbose = true
 
-@Suppress("unused")
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 sealed class Day(val day: Int, private val year: Int = 2022, val title: String = "unknown") {
 
     init {
@@ -112,7 +114,6 @@ sealed class Day(val day: Int, private val year: Int = 2022, val title: String =
     val inputAsLongs: List<Long> by lazy { rawInput.map { it.extractLong() }.show("Long") }
     val inputAsString: String by lazy { rawInput.joinToString("\n").also { listOf(it).show("One string") } }
 
-    @Suppress("MemberVisibilityCanBePrivate")
     var chunkDelimiter: (String) -> Boolean = String::isEmpty
     val inputChunks: List<List<String>> by lazy { chunkedInput(chunkDelimiter) }
 
@@ -162,7 +163,7 @@ sealed class Day(val day: Int, private val year: Int = 2022, val title: String =
         if (!verbose) return this
         header
         if (this is List<*>)
-            this.show(prompt, maxLines)
+            show(prompt, maxLines)
         else
             println("$prompt: $this")
         return this
@@ -227,7 +228,7 @@ sealed class Day(val day: Int, private val year: Int = 2022, val title: String =
 @OptIn(ExperimentalTime::class)
 inline fun runWithTiming(part: String, f: () -> Any?) {
     val (result, duration) = measureTimedValue(f)
-    with(Terminal()) { success("\nSolution $part: (took $duration)\n" + brightBlue("$result")) }
+    with(terminal) { success("\nSolution $part: (took $duration)\n" + brightBlue("$result")) }
 }
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
@@ -253,7 +254,7 @@ fun String.sequenceContainedLongs(): Sequence<Long> =
         .mapNotNull { m -> m.value.toLongOrNull() ?: warn("Number too large for Long: ${m.value}") }
 
 private fun <T> warn(msg: String): T? {
-    println("WARNING: $msg")
+    with(terminal) { warning("WARNING: $msg") }
     return null
 }
 
