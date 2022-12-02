@@ -1,9 +1,8 @@
-import com.github.ajalt.mordant.rendering.TextColors
+import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.terminal.Terminal
 import org.reflections.Reflections
 import java.io.File
 import java.net.URL
-import kotlin.system.measureTimeMillis
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -15,7 +14,7 @@ const val FAST_MODE = false
 fun main() {
     verbose = false
     val t = Terminal()
-    t.println(TextColors.red("\n~~~ Advent Of Code Runner ~~~\n"))
+    t.println(red("\n~~~ Advent Of Code Runner ~~~\n"))
     val dayClasses = getAllDayClasses().sortedBy(::dayNumber)
     val totalDuration = dayClasses.map { it.execute() }.reduceOrNull(Duration::plus)
     println("\nTotal runtime: $totalDuration")
@@ -225,14 +224,13 @@ sealed class Day(val day: Int, private val year: Int = 2022, val title: String =
 
 }
 
+@OptIn(ExperimentalTime::class)
 inline fun runWithTiming(part: String, f: () -> Any?) {
-    var result: Any?
-    val millis = measureTimeMillis { result = f() }
-    val duration = if (millis < 1000) "$millis ms" else "${"%.3f".format(millis / 1000.0)} s"
-    println("\nSolution $part: (took $duration)\n$result")
+    val (result, duration) = measureTimedValue(f)
+    with(Terminal()) { success("\nSolution $part: (took $duration)\n" + brightBlue("$result")) }
 }
 
-@Suppress("unused")
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 class ParserContext(private val columnSeparator: Regex, private val line: String) {
     val cols: List<String> by lazy { line.split(columnSeparator) }
     val nonEmptyCols: List<String> by lazy { cols.filter { it.isNotEmpty() } }
