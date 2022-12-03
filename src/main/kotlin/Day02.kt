@@ -11,7 +11,7 @@ class Day02 : Day(2, 2022, "Rock Paper Scissors") {
 
     override fun part2() = p.sumOf { (f, s) ->
         val opponent = f - 'A'
-        val you = (opponent + (s - 'Y').mod(3))
+        val you = (opponent + (s - 'Y')).mod(3)
         score(opponent, you)
     }
 

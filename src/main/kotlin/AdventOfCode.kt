@@ -10,12 +10,12 @@ import kotlin.time.measureTimedValue
 @Suppress("unused")
 const val FAST_MODE = false
 
-val terminal = Terminal()
+val aocTerminal = Terminal()
 
 @ExperimentalTime
 fun main() {
     verbose = false
-    with(terminal) {
+    with(aocTerminal) {
         println(red("\n~~~ Advent Of Code Runner ~~~\n"))
         val dayClasses = getAllDayClasses().sortedBy(::dayNumber)
         val totalDuration = dayClasses.map { it.execute() }.reduceOrNull(Duration::plus)
@@ -96,7 +96,12 @@ inline fun <reified T : Day> solve(
 var verbose = true
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-sealed class Day(val day: Int, private val year: Int = 2022, val title: String = "unknown") {
+sealed class Day(
+    val day: Int,
+    private val year: Int = 2022,
+    val title: String = "unknown",
+    val terminal: Terminal = aocTerminal
+) {
 
     init {
         require(day in 1..25) { "Wrong day $day" }
@@ -228,7 +233,7 @@ sealed class Day(val day: Int, private val year: Int = 2022, val title: String =
 @OptIn(ExperimentalTime::class)
 inline fun runWithTiming(part: String, f: () -> Any?) {
     val (result, duration) = measureTimedValue(f)
-    with(terminal) { success("\nSolution $part: (took $duration)\n" + brightBlue("$result")) }
+    with(aocTerminal) { success("\nSolution $part: (took $duration)\n" + brightBlue("$result")) }
 }
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
@@ -254,7 +259,7 @@ fun String.sequenceContainedLongs(): Sequence<Long> =
         .mapNotNull { m -> m.value.toLongOrNull() ?: warn("Number too large for Long: ${m.value}") }
 
 private fun <T> warn(msg: String): T? {
-    with(terminal) { warning("WARNING: $msg") }
+    with(aocTerminal) { warning("WARNING: $msg") }
     return null
 }
 
@@ -356,3 +361,8 @@ object AoC {
 
 @Suppress("unused")
 val pass = Unit
+
+@Suppress("NOTHING_TO_INLINE", "unused")
+inline fun useSystemProxies() {
+    System.setProperty("java.net.useSystemProxies", "true")
+}
