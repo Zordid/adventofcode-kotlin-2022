@@ -10,9 +10,9 @@ If you are into programming, logic, maybe also a little into competition, this o
 ### Overview of the puzzles
 | Day | Title                   | Runtime | Remarks                                                 |
 |----:|-------------------------|--------:|---------------------------------------------------------|
-|   1 | Calorie Counting        | few ns? | Chunks of calories, delimited by blank lines. Split it! |
-|   2 | Rock Paper Scissors     | few ns? | Win against the elves by understanding a cheat sheet    |
-|   3 | Rucksack Reorganization | few ns? | A neat thing about sets and intersections               |
+| [1] | Calorie Counting        | few ns? | Chunks of calories, delimited by blank lines. Split it! |
+| [2] | Rock Paper Scissors     | few ns? | Win against the elves by understanding a cheat sheet    |
+| [3] | Rucksack Reorganization | few ns? | A neat thing about sets and intersections               |
 
 ## My logbook of 2022
 
@@ -42,3 +42,6 @@ Done for today - the fight is real to get up as early as 5:45 again for almost o
 [aoc]: https://adventofcode.com
 [kotlin]: https://www.kotlinlang.org/
 [sebi]: https://github.com/SebastianAigner
+[1]: src/main/kotlin/Day01.kt
+[2]: src/main/kotlin/Day02.kt
+[3]: src/main/kotlin/Day03.kt
