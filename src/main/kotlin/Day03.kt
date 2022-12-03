@@ -7,7 +7,8 @@ class Day03 : Day(3, 2022, "Rucksack Reorganization") {
             .sumOf { duplicateItem -> duplicateItem.priority }
 
     override fun part2() =
-        input.chunked(3) { rucksacks -> rucksacks.map { it.toSet() } }
+        input
+            .chunked(3) { rucksacks -> rucksacks.map { it.toSet() } }
             .map { elves -> elves.reduce { common, elf -> common intersect elf }.single() }
             .sumOf { badge -> badge.priority }
 
