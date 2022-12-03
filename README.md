@@ -16,7 +16,7 @@ If you are into programming, logic, maybe also a little into competition, this o
 
 ## My logbook of 2022
 
-### Day 3: Rucksack Reorganization
+### [Day 3][3]: Rucksack Reorganization
 Lost my position 1 on our private leaderboard... *sigh*
 It took me a little too long to read the text and properly understanding it. My first iteration had some require statements to safe me from doing stupid stuff, like not splitting in right the middle of the rucksack's items list. Nice finding for the priority calculation, though. Instead of some "magic" numbers when dealing with codepoint arithmetic, you can easily write an easy to comprehend priorities list in Kotlin like this:
 
@@ -24,14 +24,14 @@ It took me a little too long to read the text and properly understanding it. My 
 
 Sweet. Of course this lacks a bit of performance, but might be more understandable than if's and `c - 'A' + 27`!
 
-### Day 2: Rock Paper Scissors
+### [Day 2][2]: Rock Paper Scissors
 I do not like to type `this[0]` and `this[1]` in the morning... use destructuring more often when dealing with input data helps! To avoid `if else` or `when` hell, map Rock, Paper, Scissors onto the values 0, 1 and 2 - winning means being exactly 1 "above" your opponents value - wrapping around at the value 2. One of the important aspects today is to use `mod` function instead of `%` operator, which is the remainder and not floor division and helps you to correctly "go down" one step.
 
 Addition: an interesting way to destructure a String without using split is to convert it to a List which is giving you the inherent destructuring tools. Here, only the first and third characters were of interest:
 
     val (first, _, third) = s.toList()
 
-### Day 1: Calorie Counting
+### [Day 1][1]: Calorie Counting
 Done for today - the fight is real to get up as early as 5:45 again for almost one month! But, it worked. At least I did not mess this one up. ;-)
 
 [^aoc]:
