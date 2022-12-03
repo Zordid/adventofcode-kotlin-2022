@@ -14,7 +14,7 @@ class Day03 : Day(3, 2022, "Rucksack Reorganization") {
         asSequence().map(CharSequence::toSet).reduce(Set<Char>::intersect).single()
 
     private val Char.priority get() = prioritiesInOrder.indexOf(this)
-    private val prioritiesInOrder = (listOf('-') + ('a'..'z') + ('A'..'Z'))
+    private val prioritiesInOrder = listOf('-') + ('a'..'z') + ('A'..'Z')
 
 }
 
