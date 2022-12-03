@@ -1,6 +1,6 @@
 class Day02 : Day(2, 2022, "Rock Paper Scissors") {
 
-    private val p = input.map { it.split(" ").map(String::first) }
+    private val p = input.map { it.toList().let { (f, _, s) -> f to s } }
 
     // Rock == 0, Paper == 1, Scissors == 2
 
