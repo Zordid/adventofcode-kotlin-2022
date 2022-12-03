@@ -2,18 +2,16 @@ class Day03 : Day(3, 2022, "Rucksack Reorganization") {
 
     override fun part1() =
         input
-            .map { rucksack -> rucksack.chunked(rucksack.length / 2) { comp -> comp.toSet() } }
-            .map { compartments -> compartments.singleCommonItem() }
-            .sumOf { duplicateItem -> duplicateItem.priority }
+            .map { rucksack -> rucksack.chunked(rucksack.length / 2) }
+            .sumOf { compartments -> compartments.singleCommonItem().priority }
 
     override fun part2() =
         input
-            .chunked(3) { rucksacks -> rucksacks.map { it.toSet() } }
-            .map { rucksacks -> rucksacks.singleCommonItem() }
-            .sumOf { badge -> badge.priority }
+            .chunked(3)
+            .sumOf { rucksacks -> rucksacks.singleCommonItem().priority }
 
-    private fun Collection<Set<Char>>.singleCommonItem() =
-        reduce { common, items -> common intersect items }.single()
+    private fun Iterable<CharSequence>.singleCommonItem() =
+        asSequence().map(CharSequence::toSet).reduce(Set<Char>::intersect).single()
 
     private val Char.priority
         get() = when (this) {
