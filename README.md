@@ -31,9 +31,9 @@ I do not like to type `this[0]` and `this[1]` in the morning... use destructurin
 Done for today - the fight is real to get up as early as 5:45 again for almost one month! But, it worked. At least I did not mess this one up. ;-)
 
 [^aoc]:
-  [Advent of Code][aoc] – An annual event of Christmas-oriented programming challenges started December 2015. 
-  Every year since then, beginning on the first day of December, a programming puzzle is published every day for twenty-five days.
-  You can solve the puzzle and provide an answer using the language of your choice.
+    [Advent of Code][aoc] – An annual event of Christmas-oriented programming challenges started December 2015. 
+    Every year since then, beginning on the first day of December, a programming puzzle is published every day for twenty-five days.
+    You can solve the puzzle and provide an answer using the language of your choice.
 
 [aoc]: https://adventofcode.com
 [kotlin]: https://www.kotlinlang.org/
