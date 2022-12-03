@@ -1,25 +1,16 @@
 class Day03 : Day(3, 2022, "Rucksack Reorganization") {
 
-    override fun part1(): Int =
-        input.sumOf { rucksack ->
-            val half = rucksack.length / 2
-            val itemsIn1 = rucksack.take(half).toSet()
-            val itemsIn2 = rucksack.drop(half).toSet()
+    override fun part1() =
+        input
+            .map { it.chunked(it.length / 2) { compartment -> compartment.toSet() } }
+            .map { (comp1, comp2) -> (comp1 intersect comp2).single() }
+            .sumOf { duplicateItem -> duplicateItem.priority }
 
-            val commonItem = (itemsIn1 intersect itemsIn2).single()
-            commonItem.priority
-        }
-
-    override fun part2(): Int {
-        val groups = input.chunked(3)
-        return groups.sumOf { rucksacks ->
-            val badge = rucksacks.map { it.toSet() }
-                .reduce { commonItems, content -> commonItems intersect content }
-                .single()
-
-            badge.priority
-        }
-    }
+    override fun part2() =
+        input.chunked(3)
+            .map { elves -> elves.map { it.toSet() } }
+            .map { it.reduce { commonItems, elfItems -> commonItems intersect elfItems }.single() }
+            .sumOf { badge -> badge.priority }
 
     private val Char.priority
         get() = when (this) {

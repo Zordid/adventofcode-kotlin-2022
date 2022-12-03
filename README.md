@@ -24,6 +24,10 @@ It took me a little too long to read the text and properly understanding it. My 
 
 Sweet. Of course this lacks a bit of performance, but might be more understandable than if's and `c - 'A' + 27`!
 
+Addition: thanks to a colleague, my splitting of the rucksack items in half looks nicer now:
+
+    val (itemsIn1: Set<Char>, itemsIn2: Set<Char>) = rucksack.chunked(rucksack.length / 2) { it.toSet() }
+
 ### [Day 2][2]: Rock Paper Scissors
 I do not like to type `this[0]` and `this[1]` in the morning... use destructuring more often when dealing with input data helps! To avoid `if else` or `when` hell, map Rock, Paper, Scissors onto the values 0, 1 and 2 - winning means being exactly 1 "above" your opponents value - wrapping around at the value 2. One of the important aspects today is to use `mod` function instead of `%` operator, which is the remainder and not floor division and helps you to correctly "go down" one step.
 
