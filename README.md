@@ -13,8 +13,28 @@ If you are into programming, logic, maybe also a little into competition, this o
 | [1] | Calorie Counting        | few ns? | Chunks of calories, delimited by blank lines. Split it! |
 | [2] | Rock Paper Scissors     | few ns? | Win against the elves by understanding a cheat sheet    |
 | [3] | Rucksack Reorganization | few ns? | A neat thing about sets and intersections               |
+| [4] | Camp Cleanup            | few ns? | Play around with ranges and operators                   |
 
 ## My logbook of 2022
+
+### [Day 4][4]: Camp Cleanup
+This was a nightmare to parse because I got my fingers tangled - not a good start at all. But the problem, once you got the data in the right format, is pretty easy. It's all about ranges and overlapping and containing. To my surprise, the Kotlin standard library does not define operator functions for that purpose. You can check whether an int is within a range using the operator function `contains` by just saying `n in range`, but you cannot ask whether another range is contained in a range.
+
+So, operator overload to the rescue!
+
+    private operator fun IntRange.contains(other: IntRange) =
+        first >= other.first && last <= other.last
+
+Because this is checking for one range contained in another, you have to reverse the question by flipping around the intervals and combining the results with or
+
+    first in second || second in first
+
+For part two, an infix function `overlaps` can be defined to check for partial overlapping
+
+    private infix fun IntRange.overlaps(other: IntRange) =
+        first <= other.last && last >= other.first
+
+This time, one check is enough, because the operation is commutative: `first overlaps second` - Done.
 
 ### [Day 3][3]: Rucksack Reorganization
 Lost my position 1 on our private leaderboard... *sigh*
@@ -49,3 +69,4 @@ Done for today - the fight is real to get up as early as 5:45 again for almost o
 [1]: src/main/kotlin/Day01.kt
 [2]: src/main/kotlin/Day02.kt
 [3]: src/main/kotlin/Day03.kt
+[4]: src/main/kotlin/Day04.kt
