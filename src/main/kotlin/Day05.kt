@@ -1,56 +1,51 @@
-import java.awt.Toolkit
-import java.awt.datatransfer.Clipboard
-import java.awt.datatransfer.StringSelection
-import java.awt.datatransfer.Transferable
+class Day05 : Day(5, 2022, "Supply Stacks") {
 
-class Day05 : Day(5, 2022) {
+    private val initialStacks = createStacks(inputAsGroups.first())
+    private val instructions = inputAsGroups.last().map(::containedNumbers)
 
-    val p = chunkedInput().map { it }
-
-    override fun part1(): Any? {
-        val (l, i) = p
-        val stacks = (0..8).map { ArrayDeque<Char>() }
-        l.reversed().drop(1).forEach { l ->
-            stacks.forEachIndexed { index, stack ->
-                val c = l.getOrNull((index * 4) + 1) ?: ' '
-                if (c != ' ')
-                    stack.add(c)
-            }
-        }
-        stacks.forEach { println(it) }
-
-        i.forEach {
-            val (q, from, to) = it.extractAllIntegers()
-            repeat(q) {
-                stacks[to-1].add(stacks[from-1].removeLast())
+    override fun part1(): Any {
+        val finalStacks = instructions.fold(initialStacks) { stacks, (q, from, to) ->
+            stacks.mapIndexed { index, stack ->
+                when (index) {
+                    from -> stack.dropLast(q)
+                    to -> stack + stacks[from].takeLast(q).reversed()
+                    else -> stack
+                }
             }
         }
 
-        return stacks.mapNotNull { it.lastOrNull() }.joinToString("")
+        return finalStacks.top().joinToString("")
     }
 
-    override fun part2(): Any? {
-        val (l, i) = p
-        val stacks = (0..8).map { ArrayDeque<Char>() }
-        l.reversed().drop(1).forEach { l ->
-            stacks.forEachIndexed { index, stack ->
-                val c = l.getOrNull((index * 4) + 1) ?: ' '
-                if (c != ' ')
-                    stack.add(c)
-            }
-        }
-        stacks.forEach { println(it) }
-
-        i.forEach {
-            val (q, from, to) = it.extractAllIntegers()
-            (0 until q).map { stacks[from-1].removeLast() }.reversed()
-                .forEach {
-                stacks[to-1].add(it)
+    override fun part2(): Any {
+        val finalStacks = instructions.fold(initialStacks) { stacks, (q, from, to) ->
+            stacks.mapIndexed { index, stack ->
+                when (index) {
+                    from -> stack.dropLast(q)
+                    to -> stack + stacks[from].takeLast(q)
+                    else -> stack
+                }
             }
         }
 
-        return stacks.mapNotNull { it.lastOrNull() }.joinToString("")
+        return finalStacks.top().joinToString("")
     }
+
+    private fun List<List<Char>>.top() =
+        mapNotNull { it.lastOrNull() }
+
+    private fun createStacks(drawing: List<String>) =
+        listOf(emptyList<Char>()) +  // add one empty stack add index 0 to accommodate indexing
+                drawing.reversed() // turn it upside down
+                    .drop(1)    // and ignore the numbering
+                    .let { pure ->
+                        val columnIndices = pure.first().withIndex().filter { it.value.isLetter() }
+                        columnIndices.map { (index, _) ->
+                            pure.mapNotNull { it.getOrNull(index)?.takeIf(Char::isLetter) }
+                        }
+                    }
+
+    private fun containedNumbers(s: String) = s.split(Regex("\\D+")).mapNotNull { it.toIntOrNull() }
 
 }
 
@@ -68,12 +63,4 @@ move 2 from 2 to 1
 move 1 from 1 to 2
     """.trimIndent(), "CMZ", "MCD"
     )
-
-
-}
-
-fun clip(a: Any?) {
-    val clipboard: Clipboard = Toolkit.getDefaultToolkit().getSystemClipboard()
-    val transferable: Transferable = StringSelection(a.toString())
-    clipboard.setContents(transferable, null)
 }

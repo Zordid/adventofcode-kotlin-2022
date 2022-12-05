@@ -1,13 +1,19 @@
+@file:Suppress("unused")
+
+import Day.Companion.NOT_YET_IMPLEMENTED
 import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.terminal.Terminal
 import org.reflections.Reflections
+import java.awt.Toolkit
+import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.StringSelection
+import java.awt.datatransfer.Transferable
 import java.io.File
 import java.net.URL
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
-@Suppress("unused")
 const val FAST_MODE = false
 
 val aocTerminal = Terminal()
@@ -31,10 +37,10 @@ private fun Class<out Day>.execute(): Duration {
     val day = constructors[0].newInstance() as Day
     print("${day.day}: ${day.title}".paddedTo(30, 30))
     val part1 = measureTimedValue { day.part1 }
-    println("Part 1 [${part1.duration.toString().padStart(6)}]: ${part1.value}")
+    println("Part 1 [${part1.duration}]: ${part1.value}")
     print(" ".repeat(30))
     val part2 = measureTimedValue { day.part2 }
-    println("Part 2 [${part2.duration.toString().padStart(6)}]: ${part2.value}")
+    println("Part 2 [${part2.duration}]: ${part2.value}")
     return part1.duration + part2.duration
 }
 
@@ -95,7 +101,7 @@ inline fun <reified T : Day> solve(
  */
 var verbose = true
 
-@Suppress("unused", "MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate")
 sealed class Day(
     val day: Int,
     private val year: Int = 2022,
@@ -119,10 +125,10 @@ sealed class Day(
     val inputAsLongs: List<Long> by lazy { rawInput.map { it.extractLong() }.show("Long") }
     val inputAsString: String by lazy { rawInput.joinToString("\n").also { listOf(it).show("One string") } }
 
-    var chunkDelimiter: (String) -> Boolean = String::isEmpty
-    val inputChunks: List<List<String>> by lazy { chunkedInput(chunkDelimiter) }
+    var groupDelimiter: (String) -> Boolean = String::isEmpty
+    val inputAsGroups: List<List<String>> by lazy { groupedInput(groupDelimiter) }
 
-    fun chunkedInput(delimiter: (String) -> Boolean = String::isEmpty): List<List<String>> {
+    fun groupedInput(delimiter: (String) -> Boolean): List<List<String>> {
         val result = mutableListOf<List<String>>()
         var currentSubList: MutableList<String>? = null
         for (line in rawInput) {
@@ -155,8 +161,9 @@ sealed class Day(
     val part1: Any? by lazy { part1() }
     val part2: Any? by lazy { part2() }
 
-    open fun part1(): Any? = "not yet implemented"
-    open fun part2(): Any? = "not yet implemented"
+    open fun part1(): Any? = NOT_YET_IMPLEMENTED
+
+    open fun part2(): Any? = NOT_YET_IMPLEMENTED
 
     fun solve() {
         header
@@ -196,6 +203,8 @@ sealed class Day(
     }
 
     companion object {
+        const val NOT_YET_IMPLEMENTED = "not yet implemented"
+
         private fun <T> matchingMapper(regex: Regex, lbd: (List<String>) -> T): (String) -> T = { s ->
             regex.matchEntire(s)?.groupValues?.let {
                 runCatching { lbd(it) }.getOrElse { ex(s, it) }
@@ -233,10 +242,12 @@ sealed class Day(
 @OptIn(ExperimentalTime::class)
 inline fun runWithTiming(part: String, f: () -> Any?) {
     val (result, duration) = measureTimedValue(f)
-    with(aocTerminal) { success("\nSolution $part: (took $duration)\n" + brightBlue("$result")) }
+    with(aocTerminal) {
+        success("\nSolution $part: (took $duration)\n" + brightBlue("$result"))
+    }
 }
 
-@Suppress("unused", "MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate")
 class ParserContext(private val columnSeparator: Regex, private val line: String) {
     val cols: List<String> by lazy { line.split(columnSeparator) }
     val nonEmptyCols: List<String> by lazy { cols.filter { it.isNotEmpty() } }
@@ -276,6 +287,16 @@ private fun Any?.paddedTo(minWidth: Int, maxWidth: Int) = with(this.toString()) 
 
 
 object AoC {
+
+    fun sendToClipboard(a: Any?): Boolean {
+        if (a in listOf(null, 0, -1, NOT_YET_IMPLEMENTED)) return false
+        return runCatching {
+            val clipboard: Clipboard = Toolkit.getDefaultToolkit().systemClipboard
+            val transferable: Transferable = StringSelection(a.toString())
+            clipboard.setContents(transferable, null)
+        }.isSuccess
+    }
+
     fun getPuzzleInput(day: Int, year: Int): List<String> {
         val cached = readInputFile(day, year)
         if (cached != null) return cached
@@ -359,10 +380,7 @@ object AoC {
 
 }
 
-@Suppress("unused")
-val pass = Unit
-
-@Suppress("NOTHING_TO_INLINE", "unused")
+@Suppress("NOTHING_TO_INLINE")
 inline fun useSystemProxies() {
     System.setProperty("java.net.useSystemProxies", "true")
 }
