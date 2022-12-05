@@ -1,7 +1,7 @@
 class Day05 : Day(5, 2022, "Supply Stacks") {
 
-    private val initialStacks = createStacks(inputAsGroups.first())
-    private val instructions = inputAsGroups.last().map(::containedNumbers)
+    val initialStacks = createStacks(inputAsGroups.first())
+    val instructions = inputAsGroups.last().map(::containedNumbers)
 
     override fun part1(): Any {
         val finalStacks = crateMover(initialStacks, instructions, oneByOne)
@@ -13,7 +13,7 @@ class Day05 : Day(5, 2022, "Supply Stacks") {
         return finalStacks.top()
     }
 
-    private fun crateMover(
+    fun crateMover(
         initialStacks: List<List<Char>>,
         instructions: List<List<Int>>,
         stackingOrder: (List<Char>) -> List<Char>
@@ -28,19 +28,18 @@ class Day05 : Day(5, 2022, "Supply Stacks") {
             }
         }
 
-    private val enBlock = { crates: List<Char> -> crates }
-    private val oneByOne = { crates: List<Char> -> crates.reversed() }
+    val enBlock = { crates: List<Char> -> crates }
+    val oneByOne = { crates: List<Char> -> crates.reversed() }
 
     private fun List<List<Char>>.top() = mapNotNull { it.lastOrNull() }.joinToString("")
 
     private fun createStacks(drawing: List<String>) =
         listOf(emptyList<Char>()) +  // add one empty stack at index 0 to accommodate indexing with "+1"
                 drawing.reversed()   // turn it upside down
-                    .drop(1)      // and ignore the numbering
                     .let { pure ->
-                        val columnIndices = pure.first().withIndex().filter { it.value.isLetter() }
-                        columnIndices.map { (index, _) ->
-                            pure.mapNotNull { it.getOrNull(index)?.takeIf(Char::isLetter) }
+                        val columnIndices = pure.first().withIndex().filter { it.value.isDigit() }
+                        columnIndices.sortedBy { it.value }.map { (index, _) ->
+                            pure.drop(1).mapNotNull { it.getOrNull(index)?.takeIf(Char::isLetter) }
                         }
                     }
 
@@ -51,10 +50,10 @@ class Day05 : Day(5, 2022, "Supply Stacks") {
 fun main() {
     solve<Day05>(
         """
-    [D]    
-[N] [C]    
-[Z] [M] [P]
- 1   2   3 
+       [D] 
+[N]    [C] 
+[Z] [P][M] 
+ 1   3  2  
 
 move 1 from 2 to 1
 move 3 from 1 to 3
