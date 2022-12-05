@@ -14,8 +14,14 @@ If you are into programming, logic, maybe also a little into competition, this o
 | [2] | Rock Paper Scissors     | few ns? | Win against the elves by understanding a cheat sheet    |
 | [3] | Rucksack Reorganization | few ns? | A neat thing about sets and intersections               |
 | [4] | Camp Cleanup            | few ns? | Play around with ranges and operators                   |
+| [5] | Supply Stacks           | few ns? | The famous tower of Hanoi with stacks of crates         |
 
 ## My logbook of 2022
+
+### [Day 5][5]: Supply Stacks
+Luckily my first intuition worked out that building a quick parser helps to speed up my processing. Others in my leaderboard tried to copy&paste it manually and made some mistakes with that manual labor, so I finally got back to position 1.
+
+Initially I went right to using ArrayDeque as the data structure for the stacks, but later reverted that to immutable Lists - if you don't require the speed from optimized data structures, maybe you should not use them in the first place? ;-)
 
 ### [Day 4][4]: Camp Cleanup
 This was a nightmare to parse because I got my fingers tangled - not a good start at all. But the problem, once you got the data in the right format, is pretty easy. It's all about ranges and overlapping and containing. To my surprise, the Kotlin standard library does not define operator functions for that purpose. You can check whether an int is within a range using the operator function `contains` by just saying `n in range`, but you cannot ask whether another range is contained in a range.
@@ -70,3 +76,4 @@ Done for today - the fight is real to get up as early as 5:45 again for almost o
 [2]: src/main/kotlin/Day02.kt
 [3]: src/main/kotlin/Day03.kt
 [4]: src/main/kotlin/Day04.kt
+[5]: src/main/kotlin/Day05.kt
