@@ -2,7 +2,7 @@
 
 package utils
 
-import utils.PixelGameEngine.Pattern.Companion.DEFAULT_PATTERN
+import utils.KPixelGameEngine.Pattern.Companion.DEFAULT_PATTERN
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
@@ -15,12 +15,14 @@ import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
 /**
- * PixelGameEngine
+ * [KPixelGameEngine]
  *
  * An absolutely simple and rudimentary engine to quickly draw rough, pixelized things on screen. Good for demos,
- * little games, mazes, etc. Inspired by olcPixelGameEngine for C++!
+ * little games, mazes, etc. Inspired by olcPixelGameEngine for C++ from OLC.
+ * https://github.com/OneLoneCoder/olcPixelGameEngine
+ * See contained LICENSE.md
  *
- * The displays a Swing window of defined size and runs in an endless game loop, allowing your code to act
+ * kPGE displays a Swing window of defined size and runs in an endless game loop, allowing your code to act
  * directly before start and within each iteration of the game loop.
  *
  * Usage:
@@ -35,7 +37,7 @@ import kotlin.system.measureTimeMillis
  * V2.4.1 - 05/12/2022 add rudimentary text drawing method
  *
  */
-abstract class PixelGameEngine(val defaultAppName: String = "PixelGameEngine") {
+abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine") {
 
     private inner class GamePanel(val pixelWidth: Int, val pixelHeight: Int) : JPanel() {
 
@@ -614,10 +616,10 @@ abstract class PixelGameEngine(val defaultAppName: String = "PixelGameEngine") {
         var px = 0
         var py = 0
         for (b in 0 until 1024 step 4) {
-            val sym1 = data[b + 0].code - 48;
-            val sym2 = data[b + 1].code - 48;
-            val sym3 = data[b + 2].code - 48;
-            val sym4 = data[b + 3].code - 48;
+            val sym1 = data[b + 0].code - 48
+            val sym2 = data[b + 1].code - 48
+            val sym3 = data[b + 2].code - 48
+            val sym4 = data[b + 3].code - 48
             val r = (sym1 shl 18) or (sym2 shl 12) or (sym3 shl 6) or sym4
 
             for (i in 0 until 24) {
@@ -649,8 +651,8 @@ abstract class PixelGameEngine(val defaultAppName: String = "PixelGameEngine") {
                 }
 
                 else -> {
-                    val ox = (c.code - 32) % 16;
-                    val oy = (c.code - 32) / 16;
+                    val ox = (c.code - 32) % 16
+                    val oy = (c.code - 32) / 16
 
                     if (scale > 1) {
                         for (i in 0 until 8)
@@ -663,9 +665,9 @@ abstract class PixelGameEngine(val defaultAppName: String = "PixelGameEngine") {
                         for (i in 0 until 8)
                             for (j in 0 until 8)
                                 if (fontSheet[i + ox * 8 + (j + oy * 8) * 128])
-                                    draw(x + sx + i, y + sy + j, color);
+                                    draw(x + sx + i, y + sy + j, color)
                     }
-                    sx += 8 * scale;
+                    sx += 8 * scale
                 }
             }
         }
