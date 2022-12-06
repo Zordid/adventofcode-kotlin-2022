@@ -7,7 +7,9 @@ class Day06 : Day(6, 2022, "Tuning Trouble") {
     override fun part2() = signal.detectStartOfMessage(14)
 
     private fun String.detectStartOfMessage(markerLength: Int) =
-        asIterable().windowed(markerLength).indexOfFirst { it.toSet().size == it.size } + markerLength
+        asIterable().windowed(markerLength).indexOfFirst { it.countDistinct() == it.size } + markerLength
+
+    private fun <T> Iterable<T>.countDistinct(): Int = toSet().size
 
 }
 

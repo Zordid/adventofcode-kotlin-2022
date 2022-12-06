@@ -14,10 +14,10 @@ class Day05 : Day(5, 2022, "Supply Stacks") {
     }
 
     fun crateMover(
-        initialStacks: List<List<Char>>,
+        initialStacks: List<Stack>,
         instructions: List<List<Int>>,
         stackingOrder: (List<Char>) -> List<Char>
-    ): List<List<Char>> =
+    ): List<Stack> =
         instructions.fold(initialStacks) { stacks, (q, from, to) ->
             stacks.mapIndexed { index, stack ->
                 when (index) {
@@ -33,7 +33,7 @@ class Day05 : Day(5, 2022, "Supply Stacks") {
 
     private fun List<List<Char>>.top() = mapNotNull { it.lastOrNull() }.joinToString("")
 
-    private fun createStacks(drawing: List<String>) =
+    private fun createStacks(drawing: List<String>): List<Stack> =
         listOf(emptyList<Char>()) +  // add one empty stack at index 0 to accommodate indexing with "+1"
                 drawing.reversed()   // turn it upside down
                     .let { pure ->
@@ -46,6 +46,8 @@ class Day05 : Day(5, 2022, "Supply Stacks") {
     private fun containedNumbers(s: String) = s.split(Regex("\\D+")).mapNotNull { it.toIntOrNull() }
 
 }
+
+private typealias Stack = List<Char>
 
 fun main() {
     solve<Day05>(
