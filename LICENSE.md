@@ -1,4 +1,4 @@
-### Contained within this Repo: a *very* rudimentary clone of OLC's PixelGameEngine in a Kotlin version by me.
+### Contained within this Repo: a *very* rudimentary clone of OLC's [PixelGameEngine][1] in a Kotlin version by me.
 
 # License (OLC-3)
 
@@ -31,3 +31,5 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+[1]: src/main/kotlin/utils/KPixelGameEngine.kt
