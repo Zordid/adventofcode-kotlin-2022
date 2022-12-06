@@ -158,7 +158,9 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
                 }
 
                 currentInstruction =
-                    instructions.removeAt(0).let { (q, f, t) -> "move $q from $f to $t" }
+                    instructions.removeAt(0).let { (q, f, t) ->
+                        "#${doneInstructions+1}/${day05.instructions.size}:\nmove $q from $f to $t"
+                    }
 
                 // first animation waits 3 seconds... ;-)
                 if (doneInstructions == 0) {
@@ -203,7 +205,7 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
     private fun drawStaticBackground() {
         clear()
         drawString(2, 2, currentInstruction)
-        drawString(2, 2, "   CrateMover  9001".asIterable().joinToString("") { "$it\n" }, Color.GRAY)
+        drawString(2, 2, "    CrateMover  9001".asIterable().joinToString("") { "$it\n" }, Color.GRAY)
 
         state.drop(1).forEachIndexed { index, stack ->
             val x = xOffset + (index * (crateWidth + space))
