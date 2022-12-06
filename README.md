@@ -15,8 +15,21 @@ If you are into programming, logic, maybe also a little into competition, this o
 | [3] | Rucksack Reorganization | few ns? | A neat thing about sets and intersections               |
 | [4] | Camp Cleanup            | few ns? | Play around with ranges and operators                   |
 | [5] | Supply Stacks           | few ns? | The famous tower of Hanoi with stacks of crates         |
+| [6] | Tuning Trouble          | few ns? | String marker detection in a signal - too easy!         |
 
 ## My logbook of 2022
+
+### [Day 6][6]: Tuning Trouble
+I do not like puzzles that are way too easy. This one turns out to be a one liner and the adaptations from part 1 to part 2 is nothing more than changing the only magic number. Why did I even get up that early? Well, to lose my leaderboard position it is. 
+Got my fingers completely tangled when trying to copy & paste my second result - pasted total crap (code) into it and hit Enter too fast. Got blocked for one minute, cursed, waited - and then entered a wrong result, because I did not take that minute to check my code properly. Nightmares at 6 in the morning...
+The solution to this puzzle in Kotlin - again a one-liner! Easy. How to find the first occurrence of
+a sub string within a string that consists of n different characters? Just write that statement:
+
+    val s = "bvwbjplbgvbhsrlpgdmjqwftvncz"
+    val len = 4
+    val pos = s.asIterable().windowed(size = len).indexOfFirst { it.toSet().size == len }
+
+Note: the `asIterable()` is needed to make windowed() deliver `List<List<Char>>` (without creating a list instance as `toList()` would do!
 
 ### [Day 5][5]: Supply Stacks
 Luckily my first intuition worked out that building a quick parser helps to speed up my processing. Others in my leaderboard tried to copy&paste it manually and made some mistakes with that manual labor, so I finally got back to position 1.
@@ -77,3 +90,4 @@ Done for today - the fight is real to get up as early as 5:45 again for almost o
 [3]: src/main/kotlin/Day03.kt
 [4]: src/main/kotlin/Day04.kt
 [5]: src/main/kotlin/Day05.kt
+[6]: src/main/kotlin/Day06.kt

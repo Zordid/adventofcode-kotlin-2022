@@ -11,7 +11,7 @@ class DaysTest {
         test<Day03>(7824, 2798)
         test<Day04>(448, 794)
         test<Day05>("VJSFHWGFT", "LCTQFBVZV")
-//        test<Day06>(372300, 1675781200288)
+        test<Day06>(1142, 2803)
 //        test<Day07>(337488, 89647695)
 //        test<Day08>(239, 946346)
 //        test<Day09>(512, 1600104)
