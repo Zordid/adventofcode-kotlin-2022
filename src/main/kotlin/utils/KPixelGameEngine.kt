@@ -12,6 +12,7 @@ import javax.swing.JPanel
 import javax.swing.WindowConstants
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import kotlin.system.measureTimeMillis
 
 /**
@@ -87,7 +88,10 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
     var limitFps: Int = Int.MAX_VALUE
         set(value) {
             field = value
-            millisPerFrame = (1000.0 / value).toLong()
+            millisPerFrame = when {
+                value < 1000 -> (1000.0 / value).roundToLong()
+                else -> 0
+            }
         }
     private var millisPerFrame: Long = 0
     private lateinit var frame: JFrame

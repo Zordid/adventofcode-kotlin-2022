@@ -17,6 +17,8 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
         const val crateHeight = 9
         const val crateWidth = 9
         const val space = 2
+        const val WIDTH = 9 * (crateWidth + space) + 70
+        const val HEIGHT = 41 * (crateHeight + space)
 
         val colors = ('A'..'Z').associateWith { randomDullColor() }
 
@@ -58,42 +60,22 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
     private val instructions = day05.instructions.toMutableList()
 
     private var currentAnimation: Animation? = null
+    private var currentInstruction = ""
+
+    private var lastRopePos: Pair<Int, Int>? = null
+    private var doneInstructions = 0
+
+    private val widthNeeded = 9 * crateWidth + 8 * space
+    private val xOffset = WIDTH / 2 - widthNeeded / 2
 
     override fun onCreate() {
-        construct(9 * (crateWidth + space) + 70, 41 * (crateHeight + space), 2, 2, "2022 / 5")
+        construct(WIDTH, HEIGHT, 2, 2, "2022 / 5")
         limitFps = 600
     }
 
-    var curr: List<Int> = emptyList()
-    var lastRopePos: Pair<Int, Int>? = null
-    var doneInstructions = 0
-    var finalAnimation = false
-
-    fun drawCrate(x: Int, y: Int, c: Char) {
-        fillRect(x, y, crateWidth, crateHeight, colors[c]!!)
-        drawString(x + 1, y + 1, c.toString())
-    }
-
-    fun drawRope(x: Int, y: Int, color: Color = Color.WHITE) {
-        drawLine(x, 0, x, y, color)
-        drawLine(x - crateWidth / 2, y, x + crateWidth / 2, y, color)
-    }
-
     override fun onUpdate(elapsedTime: Long, frame: Long) {
-        clear()
-        if (curr.isNotEmpty()) {
-            drawString(2, 2, "move ${curr[0]} from ${curr[1]} to ${curr[2]}")
-        }
-        drawString(2, 2, "   CrateMover  9000".asIterable().joinToString("") { "$it\n" }, Color.GRAY)
-        val widthNeeded = 9 * crateWidth + 8 * space
-        val xOffset = screenWidth / 2 - widthNeeded / 2
-        state.drop(1).forEachIndexed { index, stack ->
-            val x = xOffset + (index * (crateWidth + space))
-            val y = screenHeight - 1
-            stack.forEachIndexed { idx, c ->
-                drawCrate(x, y - ((idx + 1) * (crateHeight + space)), c)
-            }
-        }
+        drawStaticBackground()
+
         if (currentAnimation == null || currentAnimation?.ended == true) {
             if (instructions.isNotEmpty()) {
                 val i = instructions.first()
@@ -137,12 +119,12 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
                 currentAnimation = animation(speed * distance) {
                     // rope
                     if (lastRopePos == null) {
-                        val y by animate(0, pickupY)
-                        drawRope(xRope, y)
+                        val yRope by animate(0, pickupY)
+                        drawRope(xRope, yRope)
                     } else lastRopePos?.let {
-                        val x by animate(it.first, xRope)
-                        val y by animate(it.second, pickupY)
-                        drawRope(x, y)
+                        val xRope by animate(it.first, xRope)
+                        val yRope by animate(it.second, pickupY)
+                        drawRope(xRope, yRope)
                     }
                 } then animation(speed * (pickupY - jumpOver).absoluteValue) {
                     // pull up
@@ -175,12 +157,23 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
                     doneInstructions++
                 }
 
-                // first animation waits 3 seconds... ;-)
-                if (doneInstructions == 0)
-                    currentAnimation = animation(3.seconds) {} then currentAnimation!!
+                currentInstruction =
+                    instructions.removeAt(0).let { (q, f, t) -> "move $q from $f to $t" }
 
-                curr = instructions.removeAt(0)
-            } else if (!finalAnimation) {
+                // first animation waits 3 seconds... ;-)
+                if (doneInstructions == 0) {
+                    val saved = currentInstruction
+                    currentAnimation = currentAnimation?.let {
+                        animation(3.seconds) {
+                            currentInstruction = "Initializing..."
+                            onLastFrame {
+                                currentInstruction = saved
+                            }
+                        } then it
+                    }
+                }
+
+            } else {
                 val flying = state.drop(1).map {
                     screenHeight - 1 - it.size * (crateHeight + space) to it.lastOrNull()
                 }
@@ -199,14 +192,38 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
                     }
 
                     onLastFrame {
-                        finalAnimation = true
                         stop()
                     }
                 }
-            } else stop()
+            }
         }
         currentAnimation?.update()
     }
+
+    private fun drawStaticBackground() {
+        clear()
+        drawString(2, 2, currentInstruction)
+        drawString(2, 2, "   CrateMover  9001".asIterable().joinToString("") { "$it\n" }, Color.GRAY)
+
+        state.drop(1).forEachIndexed { index, stack ->
+            val x = xOffset + (index * (crateWidth + space))
+            val y = screenHeight - 1
+            stack.forEachIndexed { idx, c ->
+                drawCrate(x, y - ((idx + 1) * (crateHeight + space)), c)
+            }
+        }
+    }
+
+    private fun drawCrate(x: Int, y: Int, c: Char) {
+        fillRect(x, y, crateWidth, crateHeight, colors[c]!!)
+        drawString(x + 1, y + 1, c.toString())
+    }
+
+    private fun drawRope(x: Int, y: Int, color: Color = Color.WHITE) {
+        drawLine(x, 0, x, y, color)
+        drawLine(x - crateWidth / 2, y, x + crateWidth / 2, y, color)
+    }
+
 }
 
 fun main() {
