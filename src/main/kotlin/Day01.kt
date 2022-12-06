@@ -13,7 +13,8 @@ class Day01 : Day(1, 2022, "Calorie Counting") {
 }
 
 fun main() {
-    solve<Day01>("""
+    solve<Day01> {
+        """
         1000
         2000
         3000
@@ -28,5 +29,6 @@ fun main() {
         9000
 
         10000
-    """.trimIndent(), 24000, 45000)
+        """.trimIndent()(24000, 45000)
+    }
 }

@@ -10,6 +10,7 @@ import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
 import java.io.File
 import java.net.URL
+import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -56,14 +57,14 @@ var globalTestData: String? = null
         field = null
     }
 
-inline fun <reified T : Day> create(): T =
-    T::class.constructors.first { it.parameters.isEmpty() }.call()
+fun <T : Day> create(dayClass: KClass<T>): T =
+    dayClass.constructors.first { it.parameters.isEmpty() }.call()
 
 data class TestData(val input: String, val expectedPart1: Any?, val expectedPart2: Any?)
 
-inline fun <reified T : Day> test(testData: TestData) = with(testData) {
+fun <T : Day> test(dayClass: KClass<T>, testData: TestData) = with(testData) {
     globalTestData = input
-    with(create<T>()) {
+    with(create(dayClass)) {
         if (expectedPart1 != null) {
             println("Checking part 1... ")
             part1().let { result ->
@@ -83,17 +84,15 @@ inline fun <reified T : Day> test(testData: TestData) = with(testData) {
     }
 }
 
-inline fun <reified T : Day> solve(
-    testData: String? = null,
-    expectedPart1: Any? = null,
-    expectedPart2: Any? = null,
-    onlyTest: Boolean = false,
-) {
-    if (testData != null && (expectedPart1 != null || expectedPart2 != null)) {
-        test<T>(TestData(testData, expectedPart1, expectedPart2))
+inline fun <reified T : Day> solve(test: SolveDsl<T>.() -> Unit = {}) {
+    SolveDsl(T::class).test()
+    create(T::class).solve()
+}
+
+class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
+    operator fun String.invoke(part1: Any? = null, part2: Any? = null) {
+        test(dayClass, TestData(this, part1, part2))
     }
-    if (!onlyTest)
-        create<T>().solve()
 }
 
 /**

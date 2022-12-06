@@ -20,7 +20,7 @@ class Day04 : Day(4, 2022, "Camp Cleanup") {
 }
 
 fun main() {
-    solve<Day04>(
+    solve<Day04> {
         """
         2-4,6-8
         2-3,4-5
@@ -28,6 +28,6 @@ fun main() {
         2-8,3-7
         6-6,4-6
         2-6,4-8
-    """.trimIndent(), 2, 4
-    )
+        """.trimIndent()(2, 4)
+    }
 }

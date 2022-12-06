@@ -50,7 +50,7 @@ class Day05 : Day(5, 2022, "Supply Stacks") {
 private typealias Stack = List<Char>
 
 fun main() {
-    solve<Day05>(
+    solve<Day05> {
         """
        [D] 
 [N]    [C] 
@@ -61,6 +61,6 @@ move 1 from 2 to 1
 move 3 from 1 to 3
 move 2 from 2 to 1
 move 1 from 1 to 2
-    """.trimIndent(), "CMZ", "MCD"
-    )
+    """.trimIndent()("CMZ", "MCD")
+    }
 }

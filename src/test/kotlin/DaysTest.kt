@@ -52,11 +52,11 @@ private class AoCTestBuilder {
         tests += listOfNotNull(
             expectedPart1?.let {
                 DynamicTest.dynamicTest("${D::class.simpleName} - Part 1")
-                { create<D>().part1.toString() shouldBe expectedPart1.toString() }
+                { create(D::class).part1.toString() shouldBe expectedPart1.toString() }
             },
             expectedPart2?.let {
                 DynamicTest.dynamicTest("${D::class.simpleName} - Part 2")
-                { create<D>().part2.toString() shouldBe expectedPart2.toString() }
+                { create(D::class).part2.toString() shouldBe expectedPart2.toString() }
             })
     }
 

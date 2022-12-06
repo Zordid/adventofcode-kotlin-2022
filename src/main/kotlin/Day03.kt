@@ -19,7 +19,7 @@ class Day03 : Day(3, 2022, "Rucksack Reorganization") {
 }
 
 fun main() {
-    solve<Day03>(
+    solve<Day03> {
         """
         vJrwpWtwJgWrhcsFMMfFFhFp
         jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
@@ -27,6 +27,6 @@ fun main() {
         wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
         ttgJtRGJQctTZtZT
         CrZsJsPPZsGzwwsLwLmpwMDw
-    """.trimIndent(), 157, 70
-    )
+        """.trimIndent()(157, 70)
+    }
 }

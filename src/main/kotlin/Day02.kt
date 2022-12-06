@@ -24,11 +24,11 @@ class Day02 : Day(2, 2022, "Rock Paper Scissors") {
 }
 
 fun main() {
-    solve<Day02>(
+    solve<Day02> {
         """
         A Y
         B X
         C Z
-    """.trimIndent(), 15, 12
-    )
+        """.trimIndent()(15, 12)
+    }
 }

@@ -14,5 +14,10 @@ class Day06 : Day(6, 2022, "Tuning Trouble") {
 }
 
 fun main() {
-    solve<Day06>()
+    solve<Day06> {
+        "bvwbjplbgvbhsrlpgdmjqwftvncz"(5)
+        "nppdvjthqldpwncqszvftbrmjlhg"(6)
+        "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"(10)
+        "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"(11)
+    }
 }
