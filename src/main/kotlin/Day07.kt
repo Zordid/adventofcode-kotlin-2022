@@ -13,7 +13,7 @@ class Day07 : Day(7, 2022) {
 }
 
 fun main() {
-    solve<Day07>{
+    solve<Day07>(true) {
 
 
 

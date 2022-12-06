@@ -9,7 +9,10 @@ import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
 import java.io.File
+import java.net.HttpURLConnection
 import java.net.URL
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -84,9 +87,9 @@ fun <T : Day> test(dayClass: KClass<T>, testData: TestData) = with(testData) {
     }
 }
 
-inline fun <reified T : Day> solve(test: SolveDsl<T>.() -> Unit = {}) {
+inline fun <reified T : Day> solve(offerSubmit: Boolean = false, test: SolveDsl<T>.() -> Unit = {}) {
     SolveDsl(T::class).test()
-    create(T::class).solve()
+    create(T::class).solve(offerSubmit)
 }
 
 class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
@@ -164,11 +167,42 @@ sealed class Day(
 
     open fun part2(): Any? = NOT_YET_IMPLEMENTED
 
-    fun solve() {
+    fun solve(offerSubmit: Boolean) {
         header
         runWithTiming("1") { part1 }
         runWithTiming("2") { part2 }
+        if (offerSubmit) submit()
     }
+
+    private fun submit() {
+        println()
+        if (part1 == part2) {
+            aocTerminal.println(yellow("The two answer are identical. No submitting allowed."))
+            return
+        }
+        listOf(2 to part2.possibleAnswer(), 1 to part1.possibleAnswer()).firstOrNull { it.second != null }
+            ?.let { (level, answer) ->
+                with(aocTerminal) {
+                    val choice = prompt(
+                        """Should I submit "$answer" as answer to part $level?""",
+                        choices = listOf("y", "n"),
+                        default = "n"
+                    )
+                    if (choice == "y") {
+                        val response = AoC.submitAnswer(day, year, level, answer)
+                        val probablyCorrect = "That's the right" in response
+                        println(
+                            if (probablyCorrect) brightGreen(response)
+                            else brightRed(response)
+                        )
+                        println(gray(DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.now())))
+                    }
+                }
+            }
+    }
+
+    private fun Any?.possibleAnswer(): Any? =
+        this.takeIf { it !in listOf(null, 0, -1, NOT_YET_IMPLEMENTED) && it.toString().length > 1 }
 
     fun <T> T.show(prompt: String = "", maxLines: Int = 10): T {
         if (!verbose) return this
@@ -323,40 +357,29 @@ object AoC {
         return result
     }
 
-    fun download(uri: String): String {
-        val url = URL(uri)
+    fun submitAnswer(day: Int, year: Int, level: Int, answer: Any?): String {
+        println("Submitting answer for $year, day $day...")
+        val uri = "https://adventofcode.com/$year/day/$day/answer"
         val cookies = mapOf("session" to getSessionCookie())
 
-        val connection = url.openConnection()
-        connection.setRequestProperty(
-            "Cookie", cookies.entries.joinToString(separator = "; ") { (k, v) -> "$k=$v" }
-        )
-        connection.connect()
-        return connection.getInputStream().bufferedReader().readText()
-    }
+        val payload = "level=$level&answer=$answer"
 
-//    // not working yet
-//    fun submitAnswer(day: Int, year: Int, level: Int, answer: Any?): List<String> {
-//        println("Submitting answer for $year, day $day...")
-//        val uri = "https://adventofcode.com/$year/day/$day/answer"
-//        val cookies = mapOf("session" to getSessionCookie())
-//
-//        val payload = """{ "level": $level, "answer": \"$answer\" }"""
-//
-//        val url = URL(uri)
-//        val result = mutableListOf<String>()
-//        with(url.openConnection() as HttpURLConnection) {
-//            requestMethod = "POST"
-//            setRequestProperty(
-//                "Cookie", cookies.entries.joinToString(separator = "; ") { (k, v) -> "$k=$v" }
-//            )
-//            setRequestProperty("Accept", "application/json")
-//            doOutput = true
-//            outputStream.bufferedWriter().use { it.write(payload) }
-//            inputStream.bufferedReader().useLines { result.addAll(it) }
-//        }
-//        return result
-//    }
+        val url = URL(uri)
+        val result = mutableListOf<String>()
+        with(url.openConnection() as HttpURLConnection) {
+            requestMethod = "POST"
+            setRequestProperty(
+                "Cookie", cookies.entries.joinToString(separator = "; ") { (k, v) -> "$k=$v" }
+            )
+            setRequestProperty("content-type", "application/x-www-form-urlencoded")
+            doOutput = true
+            outputStream.bufferedWriter().use { it.write(payload) }
+            inputStream.bufferedReader().useLines { result.addAll(it) }
+        }
+        val processedResponse = result.filter { "<article>" in it }
+            .joinToString("") { it.replace(Regex("</?[^>]+(>|\$)"), "") }
+        return processedResponse.ifEmpty { result.joinToString("") }
+    }
 
     private fun getSessionCookie() =
         System.getenv("AOC_COOKIE")
