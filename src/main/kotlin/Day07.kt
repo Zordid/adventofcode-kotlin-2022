@@ -1,4 +1,4 @@
-class Day07 : Day(7, 2022) {
+class Day07 : Day(7, 2022, "No Space Left On Device") {
 
     val p = input
 

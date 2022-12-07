@@ -11,13 +11,32 @@ If you are into programming, logic, maybe also a little into competition, this o
 | Day | Title                   | Runtime | Remarks                                                 |
 |----:|-------------------------|--------:|---------------------------------------------------------|
 | [1] | Calorie Counting        | few ns? | Chunks of calories, delimited by blank lines. Split it! |
-| [2] | Rock Paper Scissors     | few ns? | Win against the elves by understanding a cheat sheet    |
-| [3] | Rucksack Reorganization | few ns? | A neat thing about sets and intersections               |
-| [4] | Camp Cleanup            | few ns? | Play around with ranges and operators                   |
-| [5] | Supply Stacks           | few ns? | The famous tower of Hanoi with stacks of crates         |
-| [6] | Tuning Trouble          | few ns? | String marker detection in a signal - too easy!         |
+| [2] | Rock Paper Scissors     | few ms? | Win against the elves by understanding a cheat sheet    |
+| [3] | Rucksack Reorganization | few ms? | A neat thing about sets and intersections               |
+| [4] | Camp Cleanup            | few ms? | Play around with ranges and operators                   |
+| [5] | Supply Stacks           | few ms? | The famous tower of Hanoi with stacks of crates         |
+| [6] | Tuning Trouble          | few ms? | String marker detection in a signal - too easy!         |
+| [7] | No Space Left On Device | few ms? | Let's free up some space on a disk drive.               |
 
 ## My logbook of 2022
+
+### [Day 7][7]: No Space Left On Device
+Ok, again a heavy input parsing task! Give me a log of your terminal output and I will calculate the total bytes per directory. Of course I suspected that there will be more difficult questions coming up so I made two Maps - one holding each file, one for each directory.
+The first approach to parse is simply iterating over the output, remembering the present working directory `pwd` and "understanding" each possible output making sure that unknown lines will be reported with an error. That's one way to quickly see that you missed one of the instructions in the puzzle text.
+My first failure was that I indeed did not accumulate the files in deeper directories to *all* of the directories above. So, I had to fix that. After that, it all went well.
+
+Part 2 was a different story. Even though I was *immediately* sure it would be easy, I did the most stupid of *all* mistakes. Because my setup allows me to safeguard me from wrong answers, I can add the expected answer to the test input. So I did. Looking for what's wanted, my eyes stopped at "choose the smallest: d" and I added "d" as the correct answer for the demo data...
+My part 2 worked like a charm, the expected output matched and I submitted my smallest directory *name* that would do the trick... and it did not work out...
+AoC's answer was that *maybe* I am **not looking at the full data set**!
+
+Starting to look for what's wrong, I went all directions: 
+- in which format should I submit a directories name? Just its name or its full path?
+- should I add the first "/" at the beginning or not?
+- maybe my algorithm is wrong after all?
+
+It did not occur to me that I was not supposed to answer with the total size of that directory instead of its name... for almost 15 minutes I turned around and around, trying to remember what I had submitted already, not to submit something twice. ...until I *read* the task again. 
+
+Lessons learned: **RTFM**!
 
 ### [Day 6][6]: Tuning Trouble
 I do not like puzzles that are way too easy. This one turns out to be a one liner and the adaptations from part 1 to part 2 is nothing more than changing the only magic number. Why did I even get up that early? Well, to lose my leaderboard position it is. 
@@ -91,3 +110,4 @@ Done for today - the fight is real to get up as early as 5:45 again for almost o
 [4]: src/main/kotlin/Day04.kt
 [5]: src/main/kotlin/Day05.kt
 [6]: src/main/kotlin/Day06.kt
+[7]: src/main/kotlin/Day07.kt
