@@ -171,20 +171,31 @@ sealed class Day(
         header
         runWithTiming("1") { part1 }
         runWithTiming("2") { part2 }
-        if (offerSubmit) submit()
+        if (offerSubmit) submit("$part1", "$part2")
     }
 
-    private fun submit() {
+    private fun submit(part1: String, part2: String) {
         println()
         if (part1 == part2) {
             aocTerminal.println(yellow("The two answer are identical. No submitting allowed."))
             return
         }
-        listOf(2 to part2.possibleAnswer(), 1 to part1.possibleAnswer()).firstOrNull { it.second != null }
+        listOf(2 to part2.possibleAnswerOrNull(), 1 to part1.possibleAnswerOrNull()).firstOrNull { it.second != null }
             ?.let { (level, answer) ->
+                require(answer != null)
                 with(aocTerminal) {
+                    val previouslySubmitted = AoC.previouslySubmitted(day, year, level)
+                    if (answer in previouslySubmitted.keys) {
+                        println(brightMagenta("This answer to part $level has been previously submitted!"))
+                        return
+                    }
+                    if (previouslySubmitted.isNotEmpty()) {
+                        println(brightMagenta("Previously submitted answers were:"))
+                        previouslySubmitted.values.forEach { println(it.highlight()) }
+                        println()
+                    }
                     val choice = prompt(
-                        """Should I submit "$answer" as answer to part $level?""",
+                        brightCyan("""Should I submit "$answer" as answer to part $level?"""),
                         choices = listOf("y", "n"),
                         default = "n"
                     )
@@ -196,13 +207,17 @@ sealed class Day(
                             else brightRed(response)
                         )
                         println(gray(DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.now())))
+                        AoC.appendSubmitLog(day, year, level, answer, probablyCorrect, response)
                     }
                 }
             }
     }
 
-    private fun Any?.possibleAnswer(): Any? =
-        this.takeIf { it !in listOf(null, 0, -1, NOT_YET_IMPLEMENTED) && it.toString().length > 1 }
+    private fun Any?.possibleAnswerOrNull(): String? =
+        "$this".takeIf { it !in listOf("null", 0, -1, NOT_YET_IMPLEMENTED) && it.length > 1 }
+
+    private fun String.highlight() =
+        split("\"", limit = 3).mapIndexed { index, s -> if (index == 1) brightMagenta(s) else s }.joinToString("")
 
     fun <T> T.show(prompt: String = "", maxLines: Int = 10): T {
         if (!verbose) return this
@@ -357,7 +372,7 @@ object AoC {
         return result
     }
 
-    fun submitAnswer(day: Int, year: Int, level: Int, answer: Any?): String {
+    fun submitAnswer(day: Int, year: Int, level: Int, answer: String): String {
         println("Submitting answer for $year, day $day...")
         val uri = "https://adventofcode.com/$year/day/$day/answer"
         val cookies = mapOf("session" to getSessionCookie())
@@ -381,6 +396,25 @@ object AoC {
         return processedResponse.ifEmpty { result.joinToString("") }
     }
 
+    private val logFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
+
+    fun appendSubmitLog(day: Int, year: Int, level: Int, answer: String, probablyCorrect: Boolean, response: String) {
+        val now = logFormat.format(LocalDateTime.now())
+        val id = idFor(day, year, level)
+        val text =
+            "$now - $id submitted \"$answer\" - ${if (probablyCorrect) "OK" else "FAIL with $response"}"
+        appendSubmitLog(year, text)
+    }
+
+    fun previouslySubmitted(day: Int, year: Int, level: Int): Map<String, String> =
+        readSubmitLog(year).filter { idFor(day, year, level) in it }
+            .mapNotNull { log ->
+                log.split("\"").getOrNull(1)?.let { it to log }
+            }.toMap()
+
+    private fun idFor(day: Int, year: Int, level: Int) =
+        "$year day $day part $level"
+
     private fun getSessionCookie() =
         System.getenv("AOC_COOKIE")
             ?: object {}.javaClass.getResource("session-cookie")?.readText()
@@ -389,7 +423,7 @@ object AoC {
     private fun readInputFile(day: Int, year: Int): List<String>? {
         val file = File(fileNameFor(day, year))
         file.exists() || return null
-        return file.bufferedReader().readLines()
+        return file.readLines()
     }
 
     private fun writeInputFile(day: Int, year: Int, puzzle: List<String>) {
@@ -397,8 +431,19 @@ object AoC {
         File(fileNameFor(day, year)).writeText(puzzle.joinToString("\n"))
     }
 
+    private fun readSubmitLog(year: Int): List<String> {
+        val file = File(submitLogFor(year))
+        file.exists() || return emptyList()
+        return file.readLines()
+    }
+
+    private fun appendSubmitLog(year: Int, text: String) {
+        File(submitLogFor(year)).appendText("\n$text")
+    }
+
     private fun pathNameForYear(year: Int) = "puzzles/$year"
     private fun fileNameFor(day: Int, year: Int) = "${pathNameForYear(year)}/day${"%02d".format(day)}.txt"
+    private fun submitLogFor(year: Int) = "${pathNameForYear(year)}/submit.log"
 
 }
 
