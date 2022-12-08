@@ -7,7 +7,7 @@ class Day08 : Day(8, 2022, "Treetop Tree House") {
     override fun part1() = heights.allPoints().count { here ->
         val height = heights[here]
         directions.any { d ->
-            here.treesInDirection(d).all { tree-> heights[tree] < height }
+            here.treesInDirection(d).all { tree -> heights[tree] < height }
         }
     }
 
@@ -27,7 +27,9 @@ class Day08 : Day(8, 2022, "Treetop Tree House") {
     }
 
     private infix fun Sequence<Point>.countVisibleFrom(height: Int) =
-        withIndex().firstOrNull { heights[it.value] >= height }?.let { it.index + 1 } ?: count()
+        withIndex().firstOrNull { heights[it.value] >= height }
+            ?.let { it.index + 1 }  // we found a tree of height greater or equal
+            ?: count()              // no tree blocking the view, so count them all
 
 }
 
@@ -45,6 +47,7 @@ fun main() {
 
 // 2D helpers:
 private typealias Point = Pair<Int, Int>
+
 private operator fun Point.plus(other: Point): Point = first + other.first to second + other.second
 private operator fun <T> List<List<T>>.get(p: Point) = this[p.second][p.first]
 
