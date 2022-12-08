@@ -1,6 +1,8 @@
 @file:Suppress("unused")
 
+import AoCWebInterface.Verdict
 import Day.Companion.NOT_YET_IMPLEMENTED
+import Part.*
 import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.terminal.Terminal
 import org.reflections.Reflections
@@ -11,12 +13,18 @@ import java.awt.datatransfer.Transferable
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
+import kotlin.time.toJavaDuration
 
 const val FAST_MODE = false
 
@@ -63,38 +71,41 @@ var globalTestData: String? = null
 fun <T : Day> create(dayClass: KClass<T>): T =
     dayClass.constructors.first { it.parameters.isEmpty() }.call()
 
-data class TestData(val input: String, val expectedPart1: Any?, val expectedPart2: Any?)
+data class TestData(val input: String, val expectedPart1: Any?, val expectedPart2: Any?) {
 
-fun <T : Day> test(dayClass: KClass<T>, testData: TestData) = with(testData) {
-    globalTestData = input
-    with(create(dayClass)) {
-        if (expectedPart1 != null) {
-            println("Checking part 1... ")
-            part1().let { result ->
-                check(result.toString() == expectedPart1.toString()) {
-                    "Part 1 result failed!\nExpected: $expectedPart1\nActual: $result"
-                }
+    fun <T : Day> passesTestsUsing(dayClass: KClass<T>): Boolean {
+        (expectedPart1!=null || expectedPart2 != null) || return true
+        globalTestData = input
+        val day = create(dayClass)
+        return listOf(
+            Triple(1, { day.part1() }, "$expectedPart1"),
+            Triple(2, { day.part2() }, "$expectedPart2")
+        ).all { (part, partFun, expectation) ->
+            println(gray("Checking part $part against $expectation..."))
+            val actual = partFun().toString()
+            val match = actual == expectation
+            if (!match) {
+                aocTerminal.danger("Checking of part 2 failed")
+                println("Expected: ${brightRed(expectation)}")
+                println("  Actual: ${brightRed(actual)}")
             }
-        }
-        if (expectedPart2 != null) {
-            println("Checking part 2... ")
-            part2().let { result ->
-                check(result.toString() == expectedPart2.toString()) {
-                    "Part 2 result failed!\nExpected: $expectedPart2\nActual: $result"
-                }
-            }
+            match
         }
     }
+
 }
 
 inline fun <reified T : Day> solve(offerSubmit: Boolean = false, test: SolveDsl<T>.() -> Unit = {}) {
-    SolveDsl(T::class).test()
-    create(T::class).solve(offerSubmit)
+    if (SolveDsl(T::class).apply(test).ok)
+        create(T::class).solve(offerSubmit)
 }
 
 class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
+    val ok get() = errorCount == 0
+    private var errorCount = 0
     operator fun String.invoke(part1: Any? = null, part2: Any? = null) {
-        test(dayClass, TestData(this, part1, part2))
+        if (!TestData(this, part1, part2).passesTestsUsing(dayClass))
+            errorCount++
     }
 }
 
@@ -104,17 +115,17 @@ class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
 var verbose = true
 
 @Suppress("MemberVisibilityCanBePrivate")
-sealed class Day(
-    val day: Int,
-    private val year: Int = 2022,
-    val title: String = "unknown",
-    val terminal: Terminal = aocTerminal
+sealed class Day private constructor(
+    val fqd: FQD,
+    val title: String,
+    private val terminal: Terminal,
 ) {
+    constructor(day: Int, year: Int, title: String = "unknown", terminal: Terminal = aocTerminal) : this(
+        FQD(day, Event(year)), title, terminal
+    )
 
-    init {
-        require(day in 1..25) { "Wrong day $day" }
-        require(year in 2015..2050) { "Wrong year $year" }
-    }
+    val day = fqd.day
+    val year = fqd.year
 
     private val header: Unit by lazy { if (verbose) println("--- AoC $year, Day $day: $title ---\n") }
 
@@ -180,34 +191,31 @@ sealed class Day(
             aocTerminal.println(yellow("The two answer are identical. No submitting allowed."))
             return
         }
-        listOf(2 to part2.possibleAnswerOrNull(), 1 to part1.possibleAnswerOrNull()).firstOrNull { it.second != null }
-            ?.let { (level, answer) ->
+        listOf(P2 to part2.possibleAnswerOrNull(), P1 to part1.possibleAnswerOrNull()).firstOrNull { it.second != null }
+            ?.let { (part, answer) ->
                 require(answer != null)
                 with(aocTerminal) {
-                    val previouslySubmitted = AoC.previouslySubmitted(day, year, level)
-                    if (answer in previouslySubmitted.keys) {
-                        println(brightMagenta("This answer to part $level has been previously submitted!"))
+                    val previouslySubmitted = AoC.previouslySubmitted(day, year, part)
+                    if (answer in previouslySubmitted) {
+                        println(brightMagenta("This answer to part $part has been previously submitted!"))
                         return
                     }
                     if (previouslySubmitted.isNotEmpty()) {
-                        println(brightMagenta("Previously submitted answers were:"))
-                        previouslySubmitted.values.forEach { println(it.highlight()) }
-                        println()
+                        println(previouslySubmitted)
                     }
+                    val extra = previouslySubmitted.waitSecondsOrNull?.let {
+                        "wait $it seconds and then "
+                    }.orEmpty()
                     val choice = prompt(
-                        brightCyan("""Should I submit "$answer" as answer to part $level?"""),
+                        brightCyan("""Should I ${extra}submit "${brightBlue(answer)}" as answer to part $part?"""),
                         choices = listOf("y", "n"),
                         default = "n"
                     )
                     if (choice == "y") {
-                        val response = AoC.submitAnswer(day, year, level, answer)
-                        val probablyCorrect = "That's the right" in response
-                        println(
-                            if (probablyCorrect) brightGreen(response)
-                            else brightRed(response)
-                        )
-                        println(gray(DateTimeFormatter.ofPattern("HH:mm:ss").format(LocalDateTime.now())))
-                        AoC.appendSubmitLog(day, year, level, answer, probablyCorrect, response)
+                        previouslySubmitted.waitUntilFree()
+                        val verdict = AoC.submitAnswer(fqd, part, answer)
+                        println(verdict)
+                        AoC.appendSubmitLog(day, year, part, answer, verdict)
                     }
                 }
             }
@@ -215,9 +223,6 @@ sealed class Day(
 
     private fun Any?.possibleAnswerOrNull(): String? =
         "$this".takeIf { it !in listOf("null", 0, -1, NOT_YET_IMPLEMENTED) && it.length > 1 }
-
-    private fun String.highlight() =
-        split("\"", limit = 3).mapIndexed { index, s -> if (index == 1) brightMagenta(s) else s }.joinToString("")
 
     fun <T> T.show(prompt: String = "", maxLines: Int = 10): T {
         if (!verbose) return this
@@ -336,6 +341,8 @@ private fun Any?.paddedTo(minWidth: Int, maxWidth: Int) = with(this.toString()) 
 
 object AoC {
 
+    private val web = AoCWebInterface(getSessionCookie())
+
     fun sendToClipboard(a: Any?): Boolean {
         if (a in listOf(null, 0, -1, NOT_YET_IMPLEMENTED)) return false
         return runCatching {
@@ -345,109 +352,278 @@ object AoC {
         }.isSuccess
     }
 
-    fun getPuzzleInput(day: Int, year: Int): List<String> {
-        val cached = readInputFile(day, year)
-        if (cached != null) return cached
+    fun getPuzzleInput(day: Int, year: Event): List<String> {
+        val cached = readInputFileOrNull(day, year)
+        if (!cached.isNullOrEmpty()) return cached
 
-        return runCatching {
-            downloadInput(day, year).also {
-                writeInputFile(day, year, it)
-            }
-        }.getOrElse { listOf("Unable to download $day/$year: $it") }
-    }
-
-    private fun downloadInput(day: Int, year: Int): List<String> {
-        println("Downloading puzzle for $year, day $day...")
-        val uri = "https://adventofcode.com/$year/day/$day/input"
-        val cookies = mapOf("session" to getSessionCookie())
-
-        val url = URL(uri)
-        val connection = url.openConnection()
-        connection.setRequestProperty(
-            "Cookie", cookies.entries.joinToString(separator = "; ") { (k, v) -> "$k=$v" }
-        )
-        connection.connect()
-        val result = arrayListOf<String>()
-        connection.getInputStream().bufferedReader().useLines { result.addAll(it) }
-        return result
-    }
-
-    fun submitAnswer(day: Int, year: Int, level: Int, answer: String): String {
-        println("Submitting answer for $year, day $day...")
-        val uri = "https://adventofcode.com/$year/day/$day/answer"
-        val cookies = mapOf("session" to getSessionCookie())
-
-        val payload = "level=$level&answer=$answer"
-
-        val url = URL(uri)
-        val result = mutableListOf<String>()
-        with(url.openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-            setRequestProperty(
-                "Cookie", cookies.entries.joinToString(separator = "; ") { (k, v) -> "$k=$v" }
-            )
-            setRequestProperty("content-type", "application/x-www-form-urlencoded")
-            doOutput = true
-            outputStream.bufferedWriter().use { it.write(payload) }
-            inputStream.bufferedReader().useLines { result.addAll(it) }
+        return web.downloadInput(FQD(day, year)).onSuccess {
+            writeInputFile(day, year, it)
+        }.getOrElse {
+            listOf("Unable to download $day/$year: $it")
         }
-        val processedResponse = result.filter { "<article>" in it }
-            .joinToString("") { it.replace(Regex("</?[^>]+(>|\$)"), "") }
-        return processedResponse.ifEmpty { result.joinToString("") }
     }
+
+    fun submitAnswer(fqd: FQD, part: Part, answer: String): Verdict =
+        web.submitAnswer(fqd, part, answer)
 
     private val logFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
 
-    fun appendSubmitLog(day: Int, year: Int, level: Int, answer: String, probablyCorrect: Boolean, response: String) {
-        val now = logFormat.format(LocalDateTime.now())
-        val id = idFor(day, year, level)
+    fun appendSubmitLog(day: Int, year: Event, part: Part, answer: String, verdict: Verdict) {
+        val now = LocalDateTime.now()
+        val nowText = logFormat.format(now)
+        val id = idFor(day, year, part)
         val text =
-            "$now - $id submitted \"$answer\" - ${if (probablyCorrect) "OK" else "FAIL with $response"}"
+            "$nowText - $id - submitted \"$answer\" - ${if (verdict is Verdict.Correct) "OK" else "FAIL with ${verdict::class.simpleName}"}"
         appendSubmitLog(year, text)
+        appendSubmitLog(year, verdict.text)
+        if (verdict is Verdict.WithWait) {
+            val locked = now + verdict.wait.toJavaDuration()
+            appendSubmitLog(year, "$nowText - $id - LOCKED until ${DateTimeFormatter.ISO_DATE_TIME.format(locked)}")
+        }
     }
 
-    fun previouslySubmitted(day: Int, year: Int, level: Int): Map<String, String> =
-        readSubmitLog(year).filter { idFor(day, year, level) in it }
-            .mapNotNull { log ->
-                log.split("\"").getOrNull(1)?.let { it to log }
-            }.toMap()
+    class PreviousSubmitted(
+        private val locked: LocalDateTime?,
+        private val answers: List<String>,
+        private val log: List<String>,
+    ) {
+        operator fun contains(answer: String) = answer in answers
+        fun isNotEmpty() = answers.isNotEmpty()
 
-    private fun idFor(day: Int, year: Int, level: Int) =
-        "$year day $day part $level"
+        override fun toString() = (
+                listOf(
+                    brightMagenta("Previously submitted answers were:"),
+                    "${log.size} attempts in total".takeIf { log.size > 3 }
+                ) +
+                        log.takeLast(3).map { it.highlight() } +
+                        lockInfo()
+                )
+            .filterNotNull()
+            .joinToString("\n", postfix = "\n ")
+
+        private fun String.highlight() =
+            split("\"", limit = 3).mapIndexed { index, s -> if (index == 1) brightMagenta(s) else s }.joinToString("")
+
+        private fun lockInfo() = locked?.let {
+            if (isStillLocked)
+                brightRed("Locked until $it")
+            else
+                yellow("Had been locked, but is free again!")
+        }
+
+        private val isStillLocked get() = locked?.let { LocalDateTime.now() < it } == true
+
+        val waitSecondsOrNull
+            get() = locked?.let {
+                val now = LocalDateTime.now()
+                (it.toEpochSecond(ZoneOffset.UTC) - now.toEpochSecond(ZoneOffset.UTC))
+            }.takeIf { (it ?: 0) > 0 }
+
+        fun waitUntilFree() {
+            isStillLocked || return
+            with(aocTerminal) {
+                do {
+                    cursor.move { startOfLine();clearLine() }
+                    print(brightRed("Waiting $waitSecondsOrNull more seconds..."))
+                    Thread.sleep(500)
+                } while (LocalDateTime.now() < locked!!)
+                cursor.move { startOfLine(); clearLine() }
+                println("Fire!")
+            }
+        }
+
+    }
+
+    fun previouslySubmitted(day: Int, year: Event, part: Part): PreviousSubmitted =
+        readSubmitLog(year).filter { idFor(day, year, part) in it }.let { relevant ->
+            val answers = relevant.filter { "submitted" in it }.mapNotNull { log ->
+                log.split("\"").getOrNull(1)?.let { it to log }
+            }
+            val locked = if ("LOCKED" in relevant.lastOrNull().orEmpty()) {
+                val lock = relevant.last().substringAfter("until ")
+                LocalDateTime.from(DateTimeFormatter.ISO_DATE_TIME.parse(lock))
+            } else null
+            PreviousSubmitted(locked, answers.map { it.first }, answers.map { it.second })
+        }
+
+    private fun idFor(day: Int, year: Event, part: Part) =
+        "$year day $day part $part"
 
     private fun getSessionCookie() =
         System.getenv("AOC_COOKIE")
-            ?: object {}.javaClass.getResource("session-cookie")?.readText()
+            ?: object {}.javaClass.getResource("session-cookie")?.readText()?.lines()
+                ?.firstOrNull { it.isNotBlank() }
             ?: error("Cookie missing")
 
-    private fun readInputFile(day: Int, year: Int): List<String>? {
+    private fun readInputFileOrNull(day: Int, year: Event): List<String>? {
         val file = File(fileNameFor(day, year))
         file.exists() || return null
         return file.readLines()
     }
 
-    private fun writeInputFile(day: Int, year: Int, puzzle: List<String>) {
+    private fun writeInputFile(day: Int, year: Event, puzzle: List<String>) {
         File(pathNameForYear(year)).mkdirs()
         File(fileNameFor(day, year)).writeText(puzzle.joinToString("\n"))
     }
 
-    private fun readSubmitLog(year: Int): List<String> {
+    private fun readSubmitLog(year: Event): List<String> {
         val file = File(submitLogFor(year))
         file.exists() || return emptyList()
         return file.readLines()
     }
 
-    private fun appendSubmitLog(year: Int, text: String) {
+    private fun appendSubmitLog(year: Event, text: String) {
         File(submitLogFor(year)).appendText("\n$text")
     }
 
-    private fun pathNameForYear(year: Int) = "puzzles/$year"
-    private fun fileNameFor(day: Int, year: Int) = "${pathNameForYear(year)}/day${"%02d".format(day)}.txt"
-    private fun submitLogFor(year: Int) = "${pathNameForYear(year)}/submit.log"
+    private fun fileNameFor(day: Int, year: Event) = "${pathNameForYear(year)}/day${"%02d".format(day)}.txt"
+    private fun submitLogFor(year: Event) = "${pathNameForYear(year)}/submit.log"
+    private fun pathNameForYear(year: Event) = "puzzles/$year"
 
+}
+
+@JvmInline
+value class Event(private val year: Int) {
+    init {
+        require(year in 2015..2050) { "Invalid year $year" }
+    }
+
+    override fun toString() = "$year"
+}
+
+enum class Part(private val level: Int) {
+    P1(1), P2(2);
+
+    override fun toString() = "$level"
+}
+
+data class FQD(val day: Int, val year: Event) {
+    init {
+        require(day in 1..25) { "Invalid day $day" }
+    }
+
+    override fun toString() = "$year day $day"
 }
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun useSystemProxies() {
     System.setProperty("java.net.useSystemProxies", "true")
+}
+
+class AoCWebInterface(private val sessionCookie: String) {
+    companion object {
+        private const val BASE_URL = "https://adventofcode.com"
+        private const val RIGHT = "That's the right answer"
+        private const val FAIL = "That's not the right answer"
+        private const val TOO_RECENT = "You gave an answer too recently"
+
+        fun FQD.toUri() = "$BASE_URL/$year/day/$day"
+
+        private fun String.urlEncode() = URLEncoder.encode(this, Charsets.UTF_8)
+    }
+
+    fun downloadInput(fqd: FQD): Result<List<String>> = runCatching {
+        with(fqd) {
+            println("Downloading puzzle for $fqd...")
+            val url = URL("${fqd.toUri()}/input")
+            val cookies = mapOf("session" to sessionCookie)
+
+            with(url.openConnection()) {
+                setRequestProperty(
+                    "Cookie", cookies.entries.joinToString(separator = "; ") { (k, v) -> "$k=$v" }
+                )
+                connect()
+                getInputStream().bufferedReader().readLines()
+            }
+        }
+    }
+
+    fun submitAnswer(fqd: FQD, part: Part, answer: String): Verdict = runCatching {
+        with(fqd) {
+            println("Submitting answer for $fqd...")
+            val url = URL("${fqd.toUri()}/answer")
+            val cookies = mapOf("session" to sessionCookie)
+            val payload = "level=$part&answer=${answer.urlEncode()}"
+            with(url.openConnection() as HttpURLConnection) {
+                requestMethod = "POST"
+                setRequestProperty(
+                    "Cookie", cookies.entries.joinToString(separator = "; ") { (k, v) -> "$k=$v" }
+                )
+                setRequestProperty("content-type", "application/x-www-form-urlencoded")
+                doOutput = true
+                outputStream.bufferedWriter().use { it.write(payload) }
+                inputStream.reader().readText()
+            }
+        }
+    }.map { Verdict.of(it) }.getOrElse { Verdict.ofException(it) }
+
+    sealed class Verdict private constructor(val text: String) {
+
+        class Correct(response: String) : Verdict(response) {
+            override fun toString() = brightGreen(text)
+        }
+
+        abstract class WithWait(response: String, val wait: Duration) : Verdict(response)
+
+        class Incorrect(response: String, wait: Duration) : WithWait(response, wait) {
+            override fun toString(): String = brightRed("Incorrect result, wait $wait")
+        }
+
+        class TooRecent(response: String, wait: Duration) : WithWait(response, wait) {
+            override fun toString(): String = brightRed("Too recent submission, wait $wait")
+        }
+
+        class SomethingWrong(response: String) : Verdict(response) {
+            override fun toString() = brightRed(text)
+        }
+
+        companion object {
+            private fun String.pleaseWait() =
+                lowercase().substringAfter("please wait ", "")
+                    .substringBefore(" before trying", "").ifEmpty { null }
+
+            private fun String.parseDuration(): Duration? {
+                val (a, u) = split(" ", limit = 2)
+                val amount = a.toIntOrNull() ?: when (a) {
+                    "one" -> 1
+                    "two" -> 2
+                    else -> return null
+                }
+                return when (u.let { if (u.endsWith("s")) it.dropLast(1) else it }) {
+                    "second" -> amount.seconds
+                    "minute" -> amount.minutes
+                    "hour" -> amount.hours
+                    else -> null
+                }
+            }
+
+            private fun String.parseMinSec(): Duration? {
+                val (min, sec) =
+                    (Regex(".* you have (\\d+)m (\\d+)s left to wait.*").matchEntire(lowercase())?.destructured
+                        ?: return null)
+                return min.toInt().minutes + sec.toInt().seconds
+            }
+
+            fun ofException(exception: Throwable): Verdict = SomethingWrong("Exception encountered: $exception")
+
+            fun of(response: String): Verdict {
+                val article = response.lines().filter { "<article>" in it }
+                    .joinToString("") { it.replace(Regex("</?[^>]+(>|\$)"), "") }
+                    .ifEmpty {
+                        println(brightRed("WARNING: no <article> tag found in response!"))
+                        "WARNING: no <article> tag found in response: $response"
+                    }
+
+                val pleaseWait = article.pleaseWait()?.parseDuration() ?: article.parseMinSec()
+
+                return when {
+                    FAIL in article && pleaseWait != null -> Incorrect(article, pleaseWait)
+                    RIGHT in article && pleaseWait == null -> Correct(article)
+                    TOO_RECENT in article && pleaseWait != null -> TooRecent(article, pleaseWait)
+                    else -> SomethingWrong(article)
+                }
+            }
+        }
+    }
+
 }

@@ -1,75 +1,57 @@
-import utils.Point
-import utils.allPoints
-import utils.area
+class Day08 : Day(8, 2022, "Treetop Tree House") {
 
-class Day08 : Day(8, 2022) {
+    private val heights = input.map { it.map(Char::digitToInt) }
+    private val colIndices = heights.first().indices
+    private val rowIndices = heights.indices
 
-    val h = input.map { it.map { it.digitToInt() } }
-    val cols = h.first().size
-    val rows = h.size
-
-    override fun part1(): Any? {
-        val r = h.indices.flatMap { row ->
-            h[row].foldIndexed(emptyList<Point>() to -1) { idx, (v, m), t ->
-                if (t > m) (v + (idx to row) to t) else (v to m)
-            }.first
+    override fun part1() = heights.allPoints().count { here ->
+        val height = heights[here]
+        directions.any { d ->
+            here.treesInDirection(d).all { tree-> heights[tree] < height }
         }
-        val l = h.indices.flatMap { row ->
-            h[row].reversed().foldIndexed(emptyList<Point>() to -1) { idx, (v, m), t ->
-                if (t > m) (v + (cols - idx - 1 to row) to t) else (v to m)
-            }.first
-        }
-        val t = h.first().indices.flatMap { col ->
-            h.map { it[col] }.foldIndexed(emptyList<Point>() to -1) { idx, (v, m), t ->
-                if (t > m) (v + (col to idx) to t) else (v to m)
-            }.first
-        }
-        val b = h.first().indices.flatMap { col ->
-            h.map { it[col] }.reversed().foldIndexed(emptyList<Point>() to -1) { idx, (v, m), t ->
-                if (t > m) (v + (col to rows - idx - 1) to t) else (v to m)
-            }.first
-        }
-
-        return ((r + l + t + b).toSet()).count()
     }
 
-    override fun part2(): Any? {
-        val x = h.area.allPoints().map { (x, y) ->
-            val s = h[y][x]
-            var stop = false
-            val u = (y - 1 downTo 0).map { h[it][x] }.fold(0 to -1) { (c, m), t ->
-                (if (!stop ) (c + 1 to t) else (c to m)).also { if (t>=s) stop = true }
-            }.first
-            stop = false
-            val d = (y + 1 until rows).map { h[it][x] }.fold(0 to -1) { (c, m), t ->
-                (if (!stop ) (c + 1 to t) else (c to m)).also { if (t>=s) stop = true }
-            }.first
-            stop = false
-            val r = (x + 1 until cols).map { h[y][it] }.fold(0 to -1) { (c, m), t ->
-                (if (!stop )(c + 1 to t) else (c to m)).also { if (t>=s) stop = true }
-            }.first
-            stop = false
-            val l = (x - 1 downTo 0).map { h[y][it] }.fold(0 to -1) { (c, m), t ->
-                (if (!stop ) (c + 1 to t) else (c to m)).also { if (t>=s) stop = true }
-            }.first
-
-            (x to y) to u*d*l*r
-        }.maxBy { it.second }
-        return x.second
+    override fun part2() = heights.allPoints().maxOf { here ->
+        val height = heights[here]
+        directions.map { d ->
+            here.treesInDirection(d) countVisibleFrom height
+        }.reduce(Int::times)
     }
+
+    private fun Point.treesInDirection(d: Point) = sequence {
+        var n = this@treesInDirection + d
+        while (n.first in colIndices && n.second in rowIndices) {
+            yield(n)
+            n += d
+        }
+    }
+
+    private infix fun Sequence<Point>.countVisibleFrom(height: Int) =
+        withIndex().firstOrNull { heights[it.value] >= height }?.let { it.index + 1 } ?: count()
 
 }
 
 fun main() {
-    solve<Day08>(true) {
+    solve<Day08> {
         """
-    30373
-    25512
-    65332
-    33549
-    35390
-""".trimIndent()(21, 8)
-
-
+            30373
+            25512
+            65332
+            33549
+            35390
+        """.trimIndent()(21, 8)
     }
+}
+
+// 2D helpers:
+private typealias Point = Pair<Int, Int>
+private operator fun Point.plus(other: Point): Point = first + other.first to second + other.second
+private operator fun <T> List<List<T>>.get(p: Point) = this[p.second][p.first]
+
+private val directions = listOf(-1 to 0, +1 to 0, 0 to -1, 0 to +1)
+
+private fun List<List<*>>.allPoints() = sequence {
+    for (row in this@allPoints.indices)
+        for (col in this@allPoints.first().indices)
+            yield(col to row)
 }

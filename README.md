@@ -8,17 +8,53 @@ This is my ~~fifth~~ sixth year of Advent of Code coding in a row - my body gets
 If you are into programming, logic, maybe also a little into competition, this one is for you as well!
 
 ### Overview of the puzzles
-| Day | Title                   | Runtime | Remarks                                                 |
-|----:|-------------------------|--------:|---------------------------------------------------------|
-| [1] | Calorie Counting        | few ns? | Chunks of calories, delimited by blank lines. Split it! |
-| [2] | Rock Paper Scissors     | few ms? | Win against the elves by understanding a cheat sheet    |
-| [3] | Rucksack Reorganization | few ms? | A neat thing about sets and intersections               |
-| [4] | Camp Cleanup            | few ms? | Play around with ranges and operators                   |
-| [5] | Supply Stacks           | few ms? | The famous tower of Hanoi with stacks of crates         |
-| [6] | Tuning Trouble          | few ms? | String marker detection in a signal - too easy!         |
-| [7] | No Space Left On Device | few ms? | Let's free up some space on a disk drive.               |
+| Day | Title                   | Notes                                                                                    |
+|----:|-------------------------|------------------------------------------------------------------------------------------|
+| [1] | Calorie Counting        | Chunks of calories, delimited by blank lines. Split it!                                  |
+| [2] | Rock Paper Scissors     | Win against the elves by understanding a cheat sheet                                     |
+| [3] | Rucksack Reorganization | A neat thing about sets and intersections                                                |
+| [4] | Camp Cleanup            | Play around with ranges and operators                                                    |
+| [5] | Supply Stacks           | The famous tower of Hanoi with stacks of crates                                          |
+| [6] | Tuning Trouble          | String marker detection in a signal - too easy!                                          |
+| [7] | No Space Left On Device | Let's free up some space on a disk drive.                                                |
+| [8] | Treetop Tree House      | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
 
 ## My logbook of 2022
+
+### [Day 8][8]: Treetop Tree House
+How many times do I want to lament about some mistakes made...? ;-) This time, I started out wanting to solve it with brute force and copy&paste code for 4 directions over and over again, using loops but also some fold commands. Turned out like a horror story! I have ready-made tools for working with Grid-like puzzles but I was determined to do everything with the standard library only so my convoluted loops grew over my head pretty quick as the predicates were somehow not quite right. Having to twist and turn them in four different spots, all at once while obeying the needed -1 and +1 and `..` and `downTo` in the different directions... not good at all!
+
+In the end - my lesson: do it one step at a time and build your tools from scratch if you need them rather than starting with convoluted code... 
+
+What's needed here?
+
+Firstly: a Grid, represented as a `List<List<T>>` and locations, conveniently done with `Pair<Int, Int>` in Kotlin. One typealias and two operator funs are enough to keep cool from the start:
+
+    typealias Point = Pair<Int, Int>
+    operator fun Point.plus(other: Point): Point = first + other.first to second + other.second
+    operator fun <T> List<List<T>>.get(p: Point) = this[p.second][p.first]
+
+Armed with these, you can add the four directions so using the plus operator you can now "walk" into all directions!
+
+    private val directions = listOf(-1 to 0, +1 to 0, 0 to -1, 0 to +1)
+
+Sequences come in **very** handy using the sequence builders to allow imperative style code to be well hidden from the outside - a perfect match:
+
+    private fun Point.treesInDirection(dir: Point) = sequence {
+        var next = this@treesInDirection + dir
+        while (next.first in colIndices && next.second in rowIndices) {
+            yield(next)
+            next += dir
+        }
+    }
+
+This function gives you a list of Points in a given direction that are within the region and starting one step next to your origin! Perfect for applying the puzzle's different criteria like "is the tree here visible from the outside" which just means "can you find *any* direction where all trees in that direction are smaller?"
+
+    directions.any { d ->
+        here.treesInDirection(d).all { tree-> heights[tree] < height }
+    }
+
+Part 2 added a little twist, I think. It's not *that* easy to code something like count *until* you hit a larger or equally sized tree or if you don't count how many smaller trees there are... But - have a look at my code!
 
 ### [Day 7][7]: No Space Left On Device
 Ok, again a heavy input parsing task! Give me a log of your terminal output and I will calculate the total bytes per directory. Of course I suspected that there will be more difficult questions coming up so I made two Maps - one holding each file, one for each directory.
@@ -111,3 +147,4 @@ Done for today - the fight is real to get up as early as 5:45 again for almost o
 [5]: src/main/kotlin/Day05.kt
 [6]: src/main/kotlin/Day06.kt
 [7]: src/main/kotlin/Day07.kt
+[8]: src/main/kotlin/Day08.kt
