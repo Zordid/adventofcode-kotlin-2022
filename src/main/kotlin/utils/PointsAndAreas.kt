@@ -98,8 +98,8 @@ fun areaOf(a: Point, b: Point): Area = (min(a.x, b.x) to min(a.y, b.y)) to (max(
 fun Area.isValid(): Boolean = first.x <= second.x && first.y <= second.y
 fun Area.fixed(): Area = if (isValid()) this else areaOf(first, second)
 
-fun Area.grow(by: Int = 1): Area = upperLeft.left(by).up(by) to lowerRight.right(by).down(by)
-fun Area.shrink(by: Int = 1): Area = upperLeft.left(-by).up(-by) to lowerRight.right(-by).down(-by)
+fun Area.grow(by: Int = 1): Area = upperLeft + Direction8.NORTHWEST * by to lowerRight + Direction8.SOUTHEAST * by
+fun Area.shrink(by: Int = 1): Area = upperLeft + Direction8.SOUTHEAST * by to lowerRight + Direction8.NORTHWEST * by
 fun Area.scale(by: Int): Area = upperLeft to upperLeft + (width * by - 1 to height * by - 1)
 
 fun Area.isEmpty() = size == 0
