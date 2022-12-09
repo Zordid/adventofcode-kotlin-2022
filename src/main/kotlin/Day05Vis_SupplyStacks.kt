@@ -2,7 +2,6 @@ import utils.*
 import java.awt.Color
 import kotlin.math.absoluteValue
 import kotlin.math.sqrt
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -26,38 +25,6 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine("AoC 2022 Day 5") {
 
         val colors = ('A'..'Z').associateWith { randomDullColor() }
 
-        fun randomDullColor() =
-            (0..2).map { Random.nextInt(255) }.let { (r, g, b) ->
-                with(Color(r, g, b).blendWith(Color.BLACK, 0.3)) {
-                    val hsb = Color.RGBtoHSB(red, green, blue, null)
-                    hsb[1] = hsb[1] * 9 / 10
-                    Color.getHSBColor(hsb[0], hsb[1], hsb[2])
-                }
-            }
-
-        fun Color.blendWith(other: Color, ratio: Double): Color {
-            val iRatio = 1.0f - ratio.coerceIn(0.0, 1.0)
-
-            val i1 = rgb
-            val i2 = other.rgb
-
-            val a1 = i1 shr 24 and 0xff
-            val r1 = i1 and 0xff0000 shr 16
-            val g1 = i1 and 0xff00 shr 8
-            val b1 = i1 and 0xff
-
-            val a2 = i2 shr 24 and 0xff
-            val r2 = i2 and 0xff0000 shr 16
-            val g2 = i2 and 0xff00 shr 8
-            val b2 = i2 and 0xff
-
-            val a = (a1 * iRatio + a2 * ratio).toInt()
-            val r = (r1 * iRatio + r2 * ratio).toInt()
-            val g = (g1 * iRatio + g2 * ratio).toInt()
-            val b = (b1 * iRatio + b2 * ratio).toInt()
-
-            return Color(a shl 24 or (r shl 16) or (g shl 8) or b)
-        }
     }
 
     private var state = day05.initialStacks
@@ -163,7 +130,7 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine("AoC 2022 Day 5") {
 
                 currentInstruction =
                     instructions.removeAt(0).let { (q, f, t) ->
-                        "#${doneInstructions+1}/${day05.instructions.size}:\nmove $q from $f to $t"
+                        "#${doneInstructions + 1}/${day05.instructions.size}:\nmove $q from $f to $t"
                     }
 
                 // first animation waits 3 seconds... ;-)
