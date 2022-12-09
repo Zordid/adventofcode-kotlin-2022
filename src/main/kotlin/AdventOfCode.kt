@@ -4,6 +4,7 @@ import AoCWebInterface.Verdict
 import Day.Companion.NOT_YET_IMPLEMENTED
 import Part.*
 import com.github.ajalt.mordant.rendering.TextColors.*
+import com.github.ajalt.mordant.rendering.TextStyles
 import com.github.ajalt.mordant.terminal.Terminal
 import org.reflections.Reflections
 import java.awt.Toolkit
@@ -74,20 +75,21 @@ fun <T : Day> create(dayClass: KClass<T>): T =
 data class TestData(val input: String, val expectedPart1: Any?, val expectedPart2: Any?) {
 
     fun <T : Day> passesTestsUsing(dayClass: KClass<T>): Boolean {
-        (expectedPart1!=null || expectedPart2 != null) || return true
+        (expectedPart1 != null || expectedPart2 != null) || return true
         globalTestData = input
         val day = create(dayClass)
-        return listOf(
-            Triple(1, { day.part1() }, "$expectedPart1"),
-            Triple(2, { day.part2() }, "$expectedPart2")
+        return listOfNotNull(
+            Triple(1, { day.part1() }, "$expectedPart1").takeIf { expectedPart1 != null },
+            Triple(2, { day.part2() }, "$expectedPart2").takeIf { expectedPart2 != null }
         ).all { (part, partFun, expectation) ->
             println(gray("Checking part $part against $expectation..."))
             val actual = partFun().toString()
             val match = actual == expectation
             if (!match) {
-                aocTerminal.danger("Checking of part 2 failed")
+                aocTerminal.danger("Checking of part $part failed")
                 println("Expected: ${brightRed(expectation)}")
                 println("  Actual: ${brightRed(actual)}")
+                println(yellow("Check demo ${TextStyles.bold("input")} and demo expectation!"))
             }
             match
         }
@@ -101,11 +103,10 @@ inline fun <reified T : Day> solve(offerSubmit: Boolean = false, test: SolveDsl<
 }
 
 class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
-    val ok get() = errorCount == 0
-    private var errorCount = 0
+    var ok = true
     operator fun String.invoke(part1: Any? = null, part2: Any? = null) {
-        if (!TestData(this, part1, part2).passesTestsUsing(dayClass))
-            errorCount++
+        ok || return
+        ok = TestData(this, part1, part2).passesTestsUsing(dayClass)
     }
 }
 

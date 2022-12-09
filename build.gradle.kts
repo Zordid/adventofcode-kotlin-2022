@@ -17,6 +17,10 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
+
+    //implementation("org.jetbrains.kotlinx:multik-core:0.2.0")
+    //implementation("org.jetbrains.kotlinx:multik-default:0.2.0")
+
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.reflections:reflections:0.9.12")
     implementation("com.github.ajalt.mordant:mordant:2.0.0-beta7")
