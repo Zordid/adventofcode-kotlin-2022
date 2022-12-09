@@ -56,6 +56,7 @@ infix operator fun Point.rem(factor: Int): Point = x % factor to y % factor
 infix operator fun Point.rem(factor: Point): Point = x % factor.x to y % factor.y
 
 operator fun Point.unaryMinus(): Point = -x to -y
+
 val Point.sign: Point get() = x.sign to y.sign
 
 fun Point.rotateLeft90(times: Int = 1): Point = when (times.mod(4)) {

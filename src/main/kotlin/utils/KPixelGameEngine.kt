@@ -53,12 +53,14 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         override fun paint(g: Graphics) {
             super.paint(g)
             val stableCopy = displayBuffer.copyOf()
-            var y = g.clipBounds.y / pixelHeight
-            val startX = g.clipBounds.x / pixelWidth
-            val endY =
-                ((g.clipBounds.y + g.clipBounds.height) / pixelHeight).coerceAtMost(screenHeight)
+
             val endX =
                 ((g.clipBounds.x + g.clipBounds.width) / pixelWidth).coerceAtMost(screenWidth)
+            val endY =
+                ((g.clipBounds.y + g.clipBounds.height) / pixelHeight).coerceAtMost(screenHeight)
+
+            val startX = g.clipBounds.x / pixelWidth
+            var y = g.clipBounds.y / pixelHeight
             while (y < endY) {
                 var x = startX
                 var p = y * screenWidth + x

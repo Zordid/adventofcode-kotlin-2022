@@ -25,9 +25,9 @@ class Day09 : Day(9, 2022, "Rope Bridge") {
             .runningFold(origin) { head, move -> head + move }
 
     fun List<Point>.moveTail() = runningFold(first()) { tail, head ->
-        val dis = head - tail
-        if (head != tail && dis !in Direction8.allVectors) // touching or not?
-            tail + dis.sign
+        val distance = head - tail
+        if (distance.x !in -1..1 || distance.y !in -1..1) // touching or not?
+            tail + distance.sign
         else
             tail
     }
