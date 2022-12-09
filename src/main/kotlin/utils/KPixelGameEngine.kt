@@ -36,9 +36,10 @@ import kotlin.system.measureTimeMillis
  * V2.3   - 20/11/2022 update circle methods
  * V2.4   - 23/11/2022 optionally close polylines
  * V2.4.1 - 05/12/2022 add rudimentary text drawing method
+ * V2.4.2 - 09/12/2022 title generation changed
  *
  */
-abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine") {
+abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
 
     private inner class GamePanel(val pixelWidth: Int, val pixelHeight: Int) : JPanel() {
 
@@ -58,8 +59,6 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
                 ((g.clipBounds.y + g.clipBounds.height) / pixelHeight).coerceAtMost(screenHeight)
             val endX =
                 ((g.clipBounds.x + g.clipBounds.width) / pixelWidth).coerceAtMost(screenWidth)
-            //println(g.clipBounds)
-            //println("$startX $y - $endX $endY (max: $screenWidth $screenHeight)")
             while (y < endY) {
                 var x = startX
                 var p = y * screenWidth + x
@@ -83,7 +82,15 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
     }
 
     private var appName = ""
-    var appInfo: Any = ""
+    var appInfo: Any? = null
+        set(value) {
+            if (value != field) {
+                title = "$appName - $value"
+            }
+            field = value
+        }
+
+    private var title = appName
 
     var limitFps: Int = Int.MAX_VALUE
         set(value) {
@@ -125,7 +132,6 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
         screenHeight: Int,
         pixelWidth: Int = 1,
         pixelHeight: Int = pixelWidth,
-        appName: String = defaultAppName,
     ) {
         require(screenWidth > 0 && screenHeight > 0) { "Unsupported dimensions: $screenWidth x $screenHeight" }
         require(pixelWidth > 0 && pixelHeight > 0) { "Unsupported pixel dimensions: $pixelWidth x $pixelHeight" }
@@ -135,7 +141,6 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
         buffer = Array(screenWidth * screenHeight) { Color.BLACK }
         displayBuffer = buffer
 
-        this.appName = appName
         panel = GamePanel(pixelWidth, pixelHeight)
         panel.background = Color.BLACK
         frame = JFrame()
@@ -237,7 +242,7 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
         vararg vertices: P,
         close: Boolean = false,
         color: Color = Color.WHITE,
-        pattern: Pattern = DEFAULT_PATTERN
+        pattern: Pattern = DEFAULT_PATTERN,
     ): Pattern {
         vertices.isNotEmpty() || return pattern
         var p = pattern
@@ -266,7 +271,7 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
         vararg coordinates: Int,
         close: Boolean = false,
         color: Color = Color.WHITE,
-        pattern: Pattern = DEFAULT_PATTERN
+        pattern: Pattern = DEFAULT_PATTERN,
     ): Pattern {
         require(coordinates.size % 2 == 0)
         coordinates.isNotEmpty() || return pattern
@@ -315,7 +320,7 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
         x2: Int,
         y2: Int,
         color: Color = Color.WHITE,
-        pattern: Pattern = DEFAULT_PATTERN
+        pattern: Pattern = DEFAULT_PATTERN,
     ): Pattern {
         var p = pattern.mask
 
@@ -421,7 +426,7 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
     fun drawRect(
         x: Int, y: Int, width: Int, height: Int,
         color: Color = Color.WHITE,
-        pattern: Pattern = DEFAULT_PATTERN
+        pattern: Pattern = DEFAULT_PATTERN,
     ): Pattern {
         var p = pattern
         if (width > 1 && height > 1) {
@@ -492,7 +497,7 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
         x3: Int,
         y3: Int,
         color: Color = Color.WHITE,
-        pattern: Pattern = DEFAULT_PATTERN
+        pattern: Pattern = DEFAULT_PATTERN,
     ): Pattern =
         drawPolyLine(x1, y1, x2, y2, x3, y3, close = true, color = color, pattern = pattern)
 
@@ -738,11 +743,11 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
     }
 
     private fun updateTitle(fps: Double) {
-        frame.title = "$appName - $appInfo - ${"%.1f".format(fps)} fps"
+        frame.title = "$title - ${"%.1f".format(fps)} fps"
     }
 
     private fun updateTitle(state: String) {
-        frame.title = "$appName - $appInfo - $state"
+        frame.title = "$title - $state"
     }
 
     fun FrameIterator.use() {
@@ -760,7 +765,7 @@ abstract class KPixelGameEngine(val defaultAppName: String = "KPixelGameEngine")
             return Color(resultRed.roundToInt(), resultGreen.roundToInt(), resultBlue.roundToInt())
         }
 
-        fun createGradient(from: Color, to: Color, steps: Int): List<Color> =
+        fun createGradient(from: Color, to: Color = Color.BLACK, steps: Int): List<Color> =
             (0 until steps).map { gradientColor(from, to, it / (steps - 1).toFloat()) }
 
         suspend fun FrameScope.frame() = yield(Unit)

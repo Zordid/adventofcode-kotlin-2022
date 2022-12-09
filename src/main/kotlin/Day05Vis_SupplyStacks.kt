@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.seconds
  * CAUTION! This is absolutely *horrible* code! Don't you ever do this! ;-)
  */
 
-class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
+class Day05Vis(private val day05: Day05) : KPixelGameEngine("AoC 2022 Day 5") {
 
     companion object {
         const val crateHeight = 9
@@ -69,7 +69,7 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine() {
     private val xOffset = WIDTH / 2 - widthNeeded / 2
 
     override fun onCreate() {
-        construct(WIDTH, HEIGHT, 2, 2, "2022 / 5")
+        construct(WIDTH, HEIGHT, 2, 2)
         limitFps = 600
     }
 
