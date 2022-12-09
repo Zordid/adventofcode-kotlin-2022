@@ -41,8 +41,12 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+        //languageVersion = "1.9"
+        //freeCompilerArgs = listOf("-Xcontext-receivers")
+    }
 }
 
 application {

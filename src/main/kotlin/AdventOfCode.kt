@@ -1,7 +1,6 @@
 @file:Suppress("unused")
 
 import AoCWebInterface.Verdict
-import Day.Companion.NOT_YET_IMPLEMENTED
 import Part.*
 import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.rendering.TextStyles
@@ -83,12 +82,12 @@ data class TestData(val input: String, val expectedPart1: Any?, val expectedPart
             Triple(2, { day.part2() }, "$expectedPart2").takeIf { expectedPart2 != null }
         ).all { (part, partFun, expectation) ->
             println(gray("Checking part $part against $expectation..."))
-            val actual = partFun().toString()
-            val match = actual == expectation
+            val actual = partFun()
+            val match = actual == Day.NotYetImplemented || "$actual" == expectation
             if (!match) {
                 aocTerminal.danger("Checking of part $part failed")
                 println("Expected: ${brightRed(expectation)}")
-                println("  Actual: ${brightRed(actual)}")
+                println("  Actual: ${brightRed("$actual")}")
                 println(yellow("Check demo ${TextStyles.bold("input")} and demo ${TextStyles.bold("expectation")}!"))
             }
             match
@@ -193,9 +192,9 @@ sealed class Day private constructor(
     val part1: Any? by lazy { part1() }
     val part2: Any? by lazy { part2() }
 
-    open fun part1(): Any? = NOT_YET_IMPLEMENTED
+    open fun part1(): Any? = NotYetImplemented
 
-    open fun part2(): Any? = NOT_YET_IMPLEMENTED
+    open fun part2(): Any? = NotYetImplemented
 
     fun solve(offerSubmit: Boolean) {
         header
@@ -241,7 +240,7 @@ sealed class Day private constructor(
     }
 
     private fun Any?.possibleAnswerOrNull(): String? =
-        "$this".takeIf { it !in listOf("null", 0, -1, NOT_YET_IMPLEMENTED) && it.length > 1 }
+        "$this".takeIf { it !in listOf("null", 0, -1, NotYetImplemented) && it.length > 1 }
 
     fun <T> T.show(prompt: String = "", maxLines: Int = 10): T {
         if (!verbose) return this
@@ -274,8 +273,11 @@ sealed class Day private constructor(
         return this
     }
 
+    object NotYetImplemented {
+        override fun toString() = "not yet implemented"
+    }
+
     companion object {
-        const val NOT_YET_IMPLEMENTED = "not yet implemented"
 
         private fun <T> matchingMapper(regex: Regex, lbd: (List<String>) -> T): (String) -> T = { s ->
             regex.matchEntire(s)?.groupValues?.let {
@@ -363,7 +365,7 @@ object AoC {
     private val web = AoCWebInterface(getSessionCookie())
 
     fun sendToClipboard(a: Any?): Boolean {
-        if (a in listOf(null, 0, -1, NOT_YET_IMPLEMENTED)) return false
+        if (a in listOf(null, 0, -1, Day.NotYetImplemented)) return false
         return runCatching {
             val clipboard: Clipboard = Toolkit.getDefaultToolkit().systemClipboard
             val transferable: Transferable = StringSelection(a.toString())
