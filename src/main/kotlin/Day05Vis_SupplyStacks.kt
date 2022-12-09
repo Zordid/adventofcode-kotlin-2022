@@ -11,6 +11,10 @@ import kotlin.time.Duration.Companion.seconds
  * CAUTION! This is absolutely *horrible* code! Don't you ever do this! ;-)
  */
 
+fun main() {
+    Day05Vis(Day05()).start()
+}
+
 class Day05Vis(private val day05: Day05) : KPixelGameEngine("AoC 2022 Day 5") {
 
     companion object {
@@ -204,7 +208,7 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine("AoC 2022 Day 5") {
 
     private fun drawStaticBackground() {
         clear()
-        drawString(2, 2, currentInstruction)
+        drawStringProp(2, 2, currentInstruction)
         drawString(2, 2, "    CrateMover  9001".asIterable().joinToString("") { "$it\n" }, Color.GRAY)
 
         state.drop(1).forEachIndexed { index, stack ->
@@ -226,8 +230,4 @@ class Day05Vis(private val day05: Day05) : KPixelGameEngine("AoC 2022 Day 5") {
         drawLine(x - crateWidth / 2, y, x + crateWidth / 2, y, color)
     }
 
-}
-
-fun main() {
-    Day05Vis(Day05()).start()
 }

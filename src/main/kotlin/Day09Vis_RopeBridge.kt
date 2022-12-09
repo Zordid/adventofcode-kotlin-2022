@@ -1,9 +1,13 @@
 import utils.*
 import java.awt.Color
 
+fun main() {
+    Day09Vis(Day09()).start()
+}
+
 class Day09Vis(val day: Day09) : KPixelGameEngine("AoC 2022 Day 9: Rope Bridge") {
 
-    private val pixelSize = 1
+    private val pixelSize = 3
     private val simulateKnots = 9
 
     private val solutionColor = Color.GREEN.darker()
@@ -52,13 +56,9 @@ class Day09Vis(val day: Day09) : KPixelGameEngine("AoC 2022 Day 9: Rope Bridge")
             draw(d, colors[idx])
             if (idx == tails.lastIndex) allLastTail += d
         }
-        drawString(10, screenHeight - 10 - 8, "${allLastTail.size} visited", solutionColor)
+        drawStringProp(10, screenHeight - 10 - 8, "${allLastTail.size} visited  ", solutionColor)
 
         if (frame == 0L) hold(3000)
     }
 
-}
-
-fun main() {
-    Day09Vis(Day09()).start()
 }

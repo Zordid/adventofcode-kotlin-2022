@@ -16,7 +16,7 @@ import kotlin.math.roundToLong
 import kotlin.system.measureTimeMillis
 
 /**
- * [KPixelGameEngine]
+ * [KPixelGameEngine], a Kotlin port of OLC's PixelGameEngine
  *
  * An absolutely simple and rudimentary engine to quickly draw rough, pixelized things on screen. Good for demos,
  * little games, mazes, etc. Inspired by olcPixelGameEngine for C++ from OLC.
@@ -36,7 +36,7 @@ import kotlin.system.measureTimeMillis
  * V2.3   - 20/11/2022 update circle methods
  * V2.4   - 23/11/2022 optionally close polylines
  * V2.4.1 - 05/12/2022 add rudimentary text drawing method
- * V2.4.2 - 09/12/2022 title generation changed
+ * V2.4.2 - 09/12/2022 title generation changed, added proportional font drawing
  *
  */
 abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
@@ -119,6 +119,9 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
     init {
         limitFps = 50
     }
+
+    private val fontSheet by lazy { createFontSheet() }
+    var nTabSizeInSpaces = 8
 
     private fun resetDirty() {
         dirtyXLow = Int.MAX_VALUE
@@ -600,51 +603,27 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
             draw(x, y, color)
     }
 
-    private val fontSheet by lazy { createFontSheet() }
-    private fun createFontSheet(): BooleanArray {
-        var data = ""
-        data += "?Q`0001oOch0o01o@F40o0<AGD4090LAGD<090@A7ch0?00O7Q`0600>00000000"
-        data += "O000000nOT0063Qo4d8>?7a14Gno94AA4gno94AaOT0>o3`oO400o7QN00000400"
-        data += "Of80001oOg<7O7moBGT7O7lABET024@aBEd714AiOdl717a_=TH013Q>00000000"
-        data += "720D000V?V5oB3Q_HdUoE7a9@DdDE4A9@DmoE4A;Hg]oM4Aj8S4D84@`00000000"
-        data += "OaPT1000Oa`^13P1@AI[?g`1@A=[OdAoHgljA4Ao?WlBA7l1710007l100000000"
-        data += "ObM6000oOfMV?3QoBDD`O7a0BDDH@5A0BDD<@5A0BGeVO5ao@CQR?5Po00000000"
-        data += "Oc``000?Ogij70PO2D]??0Ph2DUM@7i`2DTg@7lh2GUj?0TO0C1870T?00000000"
-        data += "70<4001o?P<7?1QoHg43O;`h@GT0@:@LB@d0>:@hN@L0@?aoN@<0O7ao0000?000"
-        data += "OcH0001SOglLA7mg24TnK7ln24US>0PL24U140PnOgl0>7QgOcH0K71S0000A000"
-        data += "00H00000@Dm1S007@DUSg00?OdTnH7YhOfTL<7Yh@Cl0700?@Ah0300700000000"
-        data += "<008001QL00ZA41a@6HnI<1i@FHLM81M@@0LG81?O`0nC?Y7?`0ZA7Y300080000"
-        data += "O`082000Oh0827mo6>Hn?Wmo?6HnMb11MP08@C11H`08@FP0@@0004@000000000"
-        data += "00P00001Oab00003OcKP0006@6=PMgl<@440MglH@000000`@000001P00000000"
-        data += "Ob@8@@00Ob@8@Ga13R@8Mga172@8?PAo3R@827QoOb@820@0O`0007`0000007P0"
-        data += "O`000P08Od400g`<3V=P0G`673IP0`@3>1`00P@6O`P00g`<O`000GP800000000"
-        data += "?P9PL020O`<`N3R0@E4HC7b0@ET<ATB0@@l6C4B0O`H3N7b0?P01L3R000000020"
 
-        val sheet = BooleanArray(128 * 48)
+    /**
+     * Draws text on screen in the defined color.
+     *
+     * @param p the text's x top left coordinate
+     * @param text the text to draw - only 96 printable characters are allowed
+     * @param color the color to draw in
+     * @param scale scale factor
+     */
+    fun drawString(p: P, text: String, color: Color = Color.WHITE, scale: Int = 1) =
+        drawString(p.first, p.second, text, color, scale)
 
-        var px = 0
-        var py = 0
-        for (b in 0 until 1024 step 4) {
-            val sym1 = data[b + 0].code - 48
-            val sym2 = data[b + 1].code - 48
-            val sym3 = data[b + 2].code - 48
-            val sym4 = data[b + 3].code - 48
-            val r = (sym1 shl 18) or (sym2 shl 12) or (sym3 shl 6) or sym4
-
-            for (i in 0 until 24) {
-                val k = r and (1 shl i) != 0
-                if (k) sheet[px + py * 128] = true
-                if (++py == 48) {
-                    px++
-                    py = 0
-                }
-            }
-        }
-        return sheet
-    }
-
-    var nTabSizeInSpaces = 8
-
+    /**
+     * Draws text on screen in the defined color.
+     *
+     * @param x the text's top left x coordinate
+     * @param y the text's top left y coordinate
+     * @param text the text to draw - only 96 printable characters are allowed
+     * @param color the color to draw in
+     * @param scale scale factor
+     */
     fun drawString(x: Int, y: Int, text: String, color: Color = Color.WHITE, scale: Int = 1) {
         var sx = 0
         var sy = 0
@@ -680,6 +659,94 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
                 }
             }
         }
+    }
+
+    /**
+     * Calculates the area required for the given text using proportional drawing.
+     *
+     * @param text the text to measure
+     * @param scale the scale factor for text drawing
+     * @return width and height in pixel
+     */
+    fun getTextSizeProp(text: String, scale: Int = 1): P {
+        var sx = 0
+        var lines = 1
+        var maxWidth = 0
+        for (c in text) {
+            when (c) {
+                '\n' -> {
+                    maxWidth = maxWidth.coerceAtLeast(sx)
+                    lines++; sx = 0
+                }
+
+                '\t' -> sx += nTabSizeInSpaces * 8
+                else -> sx += vFontSpacing[c.code - 32].second
+            }
+        }
+        return maxWidth.coerceAtLeast(sx) * scale to (lines * 8 * scale)
+    }
+
+    /**
+     * Draws text on screen in the defined color using proportional spacing.
+     *
+     * @param p the text's top left coordinate
+     * @param text the text to draw - only 96 printable characters are allowed
+     * @param color the color to draw in
+     * @param scale scale factor
+     * @return the width of the text drawn
+     */
+    fun drawStringProp(p: Point, text: String, color: Color = Color.WHITE, scale: Int = 1) =
+        drawStringProp(p.x, p.y, text, color, scale)
+
+    /**
+     * Draws text on screen in the defined color using proportional spacing.
+     *
+     * @param x the text's top left x coordinate
+     * @param y the text's top left y coordinate
+     * @param text the text to draw - only 96 printable characters are allowed
+     * @param color the color to draw in
+     * @param scale scale factor
+     * @return the width of the text drawn
+     */
+    fun drawStringProp(x: Int, y: Int, text: String, color: Color = Color.WHITE, scale: Int = 1): Int {
+        var maxWidth = 0
+        var sx = 0
+        var sy = 0
+        for (c in text) {
+            when (c) {
+                '\n' -> {
+                    sx = 0
+                    sy += 8 * scale
+                }
+
+                '\t' -> {
+                    sx += 8 * nTabSizeInSpaces * scale
+                }
+
+                else -> {
+                    val ox = (c.code - 32) % 16
+                    val oy = (c.code - 32) / 16
+
+                    val cWidth = vFontSpacing[c.code - 32].second
+                    if (scale > 1) {
+                        for (i in 0 until cWidth)
+                            for (j in 0 until 8)
+                                if (fontSheet[i + ox * 8 + vFontSpacing[c.code - 32].first + (j + oy * 8) * 128])
+                                    for (`is` in 0 until scale)
+                                        for (js in 0 until scale)
+                                            draw(x + sx + (i * scale) + `is`, y + sy + (j * scale) + js, color)
+                    } else {
+                        for (i in 0 until cWidth)
+                            for (j in 0 until 8)
+                                if (fontSheet[i + ox * 8 + vFontSpacing[c.code - 32].first + (j + oy * 8) * 128])
+                                    draw(x + sx + i, y + sy + j, color)
+                    }
+                    sx += cWidth * scale
+                    maxWidth = maxWidth.coerceAtLeast(sx)
+                }
+            }
+        }
+        return maxWidth
     }
 
     /**
@@ -771,6 +838,58 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         suspend fun FrameScope.frame() = yield(Unit)
 
         fun frameSequence(block: suspend FrameScope.() -> Unit): FrameIterator = sequence(block).iterator()
+
+        val vFontSpacing = byteArrayOf(
+            0x03, 0x25, 0x16, 0x08, 0x07, 0x08, 0x08, 0x04, 0x15, 0x15, 0x08, 0x07, 0x15, 0x07, 0x24, 0x08,
+            0x08, 0x17, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x24, 0x15, 0x06, 0x07, 0x16, 0x17,
+            0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x17, 0x08, 0x08, 0x17, 0x08, 0x08, 0x08,
+            0x08, 0x08, 0x08, 0x08, 0x17, 0x08, 0x08, 0x08, 0x08, 0x17, 0x08, 0x15, 0x08, 0x15, 0x08, 0x08,
+            0x24, 0x18, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x17, 0x33, 0x17, 0x17, 0x33, 0x18, 0x17, 0x17,
+            0x17, 0x17, 0x17, 0x17, 0x07, 0x17, 0x17, 0x18, 0x18, 0x17, 0x17, 0x07, 0x33, 0x07, 0x08, 0x00,
+        ).map { (it.toInt() shr 4) to (it.toInt() and 15) }
+
+        private fun createFontSheet(): BooleanArray {
+            val data = buildString {
+                append("?Q`0001oOch0o01o@F40o0<AGD4090LAGD<090@A7ch0?00O7Q`0600>00000000")
+                append("O000000nOT0063Qo4d8>?7a14Gno94AA4gno94AaOT0>o3`oO400o7QN00000400")
+                append("Of80001oOg<7O7moBGT7O7lABET024@aBEd714AiOdl717a_=TH013Q>00000000")
+                append("720D000V?V5oB3Q_HdUoE7a9@DdDE4A9@DmoE4A;Hg]oM4Aj8S4D84@`00000000")
+                append("OaPT1000Oa`^13P1@AI[?g`1@A=[OdAoHgljA4Ao?WlBA7l1710007l100000000")
+                append("ObM6000oOfMV?3QoBDD`O7a0BDDH@5A0BDD<@5A0BGeVO5ao@CQR?5Po00000000")
+                append("Oc``000?Ogij70PO2D]??0Ph2DUM@7i`2DTg@7lh2GUj?0TO0C1870T?00000000")
+                append("70<4001o?P<7?1QoHg43O;`h@GT0@:@LB@d0>:@hN@L0@?aoN@<0O7ao0000?000")
+                append("OcH0001SOglLA7mg24TnK7ln24US>0PL24U140PnOgl0>7QgOcH0K71S0000A000")
+                append("00H00000@Dm1S007@DUSg00?OdTnH7YhOfTL<7Yh@Cl0700?@Ah0300700000000")
+                append("<008001QL00ZA41a@6HnI<1i@FHLM81M@@0LG81?O`0nC?Y7?`0ZA7Y300080000")
+                append("O`082000Oh0827mo6>Hn?Wmo?6HnMb11MP08@C11H`08@FP0@@0004@000000000")
+                append("00P00001Oab00003OcKP0006@6=PMgl<@440MglH@000000`@000001P00000000")
+                append("Ob@8@@00Ob@8@Ga13R@8Mga172@8?PAo3R@827QoOb@820@0O`0007`0000007P0")
+                append("O`000P08Od400g`<3V=P0G`673IP0`@3>1`00P@6O`P00g`<O`000GP800000000")
+                append("?P9PL020O`<`N3R0@E4HC7b0@ET<ATB0@@l6C4B0O`H3N7b0?P01L3R000000020")
+            }
+
+            val sheet = BooleanArray(128 * 48)
+            var px = 0
+            var py = 0
+            for (b in 0 until 1024 step 4) {
+                val sym1 = data[b + 0].code - 48
+                val sym2 = data[b + 1].code - 48
+                val sym3 = data[b + 2].code - 48
+                val sym4 = data[b + 3].code - 48
+                val r = (sym1 shl 18) or (sym2 shl 12) or (sym3 shl 6) or sym4
+
+                for (i in 0 until 24) {
+                    val k = r and (1 shl i) != 0
+                    if (k) sheet[px + py * 128] = true
+                    if (++py == 48) {
+                        px++
+                        py = 0
+                    }
+                }
+            }
+            return sheet
+        }
+
     }
 
     @JvmInline
