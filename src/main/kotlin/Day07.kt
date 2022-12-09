@@ -2,20 +2,19 @@ class Day07 : Day(7, 2022, "No Space Left On Device") {
 
     val p = input
 
-    override fun part1(): Any? {
-        var pwd = listOf("/")
-        val files = mutableMapOf<List<String>, Long>()
-        val dir = mutableMapOf<List<String>, Long>()
+    val directories = buildMap<List<String>, Long> {
+        var pwd = listOf("")
         for (o in p) {
             when {
-                o == "$ cd /" -> pwd = listOf("/")
+                o == "$ cd /" -> pwd = listOf("")
                 o == "$ cd .." -> pwd = pwd.dropLast(1)
-                o.startsWith("$ cd ") -> pwd = pwd + o.substringAfter("$ cd ")
+                o.startsWith("$ cd ") -> {
+                    pwd = pwd + o.substringAfter("$ cd ")
+                }
                 o.extractAllLongs().isNotEmpty() -> {
-                    files[pwd + o.split(" ").first()] = o.extractAllLongs().first()
                     pwd.indices.forEach {
                         val sd = pwd.take(it + 1)
-                        dir[sd] = dir.getOrDefault(sd, 0L) + o.extractAllLongs().first()
+                        put(sd, getOrDefault(sd, 0L) + o.extractAllLongs().first())
                     }
                 }
 
@@ -24,38 +23,17 @@ class Day07 : Day(7, 2022, "No Space Left On Device") {
                 else -> error(o)
             }
         }
-        return dir.filterValues { it <= 100000 }.values.sum()
     }
 
-    override fun part2(): Any? {
-        var pwd = listOf("/")
-        val files = mutableMapOf<List<String>, Long>()
-        val dir = mutableMapOf<List<String>, Long>()
-        for (o in p) {
-            when {
-                o == "$ cd /" -> pwd = listOf("/")
-                o == "$ cd .." -> pwd = pwd.dropLast(1)
-                o.startsWith("$ cd ") -> pwd = pwd + o.substringAfter("$ cd ")
-                o.extractAllLongs().isNotEmpty() -> {
-                    files[pwd + o.split(" ").first()] = o.extractAllLongs().first()
-                    pwd.indices.forEach {
-                        val sd = pwd.take(it + 1)
-                        dir[sd] = dir.getOrDefault(sd, 0L) + o.extractAllLongs().first()
-                    }
-                }
+    override fun part1() = directories.filterValues { it <= 100000 }.values.sum()
 
-                o == "$ ls" -> {}
-                o.startsWith("dir") -> {}
-                else -> error(o)
-            }
-        }
-
-        val total = 70000000L
-        val needed = 30000000L
-        val available = total - files.values.sum()
+    override fun part2(): Long {
+        val total = 70_000_000L
+        val needed = 30_000_000L
+        val available = total - directories[listOf("")]!!
         val requires = needed - available
 
-        return dir.filter { it.value >= requires }.minBy { it.value }.value
+        return directories.filter { it.value >= requires }.minBy { it.value }.value
     }
 
 }
