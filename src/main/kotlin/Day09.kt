@@ -47,7 +47,7 @@ fun main() {
             D 1
             L 5
             R 2
-        """.trimIndent()(13)
+        """.trimIndent() part1 13
 
         """
             R 5
@@ -58,6 +58,6 @@ fun main() {
             D 10
             L 25
             U 20
-        """.trimIndent()(part2 = 36)
+        """.trimIndent() part2 36
     }
 }

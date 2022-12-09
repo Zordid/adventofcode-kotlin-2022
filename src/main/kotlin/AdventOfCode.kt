@@ -89,7 +89,7 @@ data class TestData(val input: String, val expectedPart1: Any?, val expectedPart
                 aocTerminal.danger("Checking of part $part failed")
                 println("Expected: ${brightRed(expectation)}")
                 println("  Actual: ${brightRed(actual)}")
-                println(yellow("Check demo ${TextStyles.bold("input")} and demo expectation!"))
+                println(yellow("Check demo ${TextStyles.bold("input")} and demo ${TextStyles.bold("expectation")}!"))
             }
             match
         }
@@ -98,16 +98,34 @@ data class TestData(val input: String, val expectedPart1: Any?, val expectedPart
 }
 
 inline fun <reified T : Day> solve(offerSubmit: Boolean = false, test: SolveDsl<T>.() -> Unit = {}) {
-    if (SolveDsl(T::class).apply(test).ok)
+    if (SolveDsl(T::class).apply(test).isEverythingOK())
         create(T::class).solve(offerSubmit)
 }
 
 class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
+
+    val tests = mutableListOf<TestData>()
+
     var ok = true
     operator fun String.invoke(part1: Any? = null, part2: Any? = null) {
         ok || return
         ok = TestData(this, part1, part2).passesTestsUsing(dayClass)
     }
+
+    infix fun String.part1(expectedPart1: Any?): TestData =
+        TestData(this, expectedPart1, null).also { tests += it }
+
+    infix fun String.part2(expectedPart2: Any?) {
+        TestData(this, null, expectedPart2).also { tests += it }
+    }
+
+    infix fun TestData.part2(expectedPart2: Any?) {
+        tests.remove(this)
+        copy(expectedPart2 = expectedPart2).also { tests += it }
+    }
+
+    fun isEverythingOK() =
+        ok && tests.all { it.passesTestsUsing(dayClass) }
 }
 
 /**
@@ -189,7 +207,7 @@ sealed class Day private constructor(
     private fun submit(part1: String, part2: String) {
         println()
         if (part1 == part2) {
-            aocTerminal.println(yellow("The two answer are identical. No submitting allowed."))
+            aocTerminal.println(yellow("The two answers are identical. No submitting allowed."))
             return
         }
         listOf(P2 to part2.possibleAnswerOrNull(), P1 to part1.possibleAnswerOrNull()).firstOrNull { it.second != null }
