@@ -166,16 +166,6 @@ val Area.height: Int
 fun Area.overlaps(other: Area): Boolean =
     max(left, other.left) <= min(right, other.right) && max(top, other.top) <= min(bottom, other.bottom)
 
-fun <T> Area.mutableGridOf(init: (Point) -> T): MutableGrid<T> {
-    require(isNotEmpty()) { "Area $this is empty and cannot create a grid" }
-    return (0 until height).map { y ->
-        (0 until width).map { x -> init(x to y) }.toMutableList()
-    }
-}
-
-fun <T> Area.createGrid(init: (Point) -> T): Grid<T> = mutableGridOf(init)
-fun <T> Area.createMutableGrid(init: (Point) -> T): MutableGrid<T> = mutableGridOf(init)
-
 fun Iterable<Point>.boundingArea(): Area? {
     val (minX, maxX) = minMaxByOrNull { it.x } ?: return null
     val (minY, maxY) = minMaxByOrNull { it.y }!!
