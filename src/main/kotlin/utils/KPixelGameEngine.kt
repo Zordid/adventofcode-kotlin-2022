@@ -3,6 +3,7 @@
 package utils
 
 import utils.KPixelGameEngine.Pattern.Companion.DEFAULT_PATTERN
+import utils.KPixelGameEngine.PixelMode.*
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
@@ -38,6 +39,7 @@ import kotlin.system.measureTimeMillis
  * V2.4   - 23/11/2022 optionally close polylines
  * V2.4.1 - 05/12/2022 add rudimentary text drawing method
  * V2.4.2 - 09/12/2022 title generation changed, added proportional font drawing
+ * V2.4.3 - 10/12/2022 add pixel modes for alpha blend drawing
  *
  */
 abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
@@ -217,6 +219,29 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
     fun draw(pos: P, color: Color = Color.WHITE) =
         draw(pos.first, pos.second, color)
 
+    private fun getPixel(x: Int, y: Int): Color {
+        val pos = y * screenWidth + x
+        return if (x in 0 until screenWidth && y in 0 until screenHeight)
+            buffer[pos]
+        else Color.BLACK
+    }
+
+    private fun setPixel(x: Int, y: Int, color: Color) {
+        val pos = y * screenWidth + x
+        if (x in 0 until screenWidth && y in 0 until screenHeight && buffer[pos] != color) {
+            buffer[pos] = color
+            if (dirtyXLow > x) dirtyXLow = x
+            if (dirtyXHigh < x) dirtyXHigh = x
+            if (dirtyYLow > y) dirtyYLow = y
+            if (dirtyYHigh < y) dirtyYHigh = y
+        }
+    }
+
+    enum class PixelMode { NORMAL, MASK, ALPHA, CUSTOM }
+
+    var pixelMode = NORMAL
+    var blendFactor = 1.0f
+
     /**
      * Draws a pixel on the screen in the defined color.
      *
@@ -225,13 +250,28 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
      * @param color the color to draw
      */
     fun draw(x: Int, y: Int, color: Color = Color.WHITE) {
-        val pos = y * screenWidth + x
-        if (x in 0 until screenWidth && y in 0 until screenHeight && buffer[pos] != color) {
-            buffer[pos] = color
-            if (dirtyXLow > x) dirtyXLow = x
-            if (dirtyXHigh < x) dirtyXHigh = x
-            if (dirtyYLow > y) dirtyYLow = y
-            if (dirtyYHigh < y) dirtyYHigh = y
+        when (pixelMode) {
+            NORMAL -> {
+                setPixel(x, y, color)
+            }
+            MASK -> {
+                if (color.alpha == 255) setPixel(x, y, color)
+            }
+            ALPHA -> {
+                if (color.alpha < 255) {
+                    val d = getPixel(x, y)
+                    val a = (color.alpha / 255.0f) * blendFactor
+                    val c = 1.0f - a
+                    val r = (a * color.red + c * d.red).toInt()
+                    val g = (a * color.green + c * d.green).toInt()
+                    val b = (a * color.blue + c * d.blue).toInt()
+                    setPixel(x, y, Color(r, g, b))
+                } else
+                    setPixel(x, y, color)
+            }
+            CUSTOM -> {
+                TODO()
+            }
         }
     }
 
@@ -853,6 +893,8 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         fun createGradient(from: Color, to: Color = Color.BLACK, steps: Int): List<Color> =
             (0 until steps).map { gradientColor(from, to, it / (steps - 1).toFloat()) }
 
+        fun randomGrayColor(brightnessFactor: Float = 0.3f): Color =
+            Color.getHSBColor(0.0F, 0.0F, Random.nextFloat() * brightnessFactor)
 
         fun randomDullColor() =
             (0..2).map { Random.nextInt(255) }.let { (r, g, b) ->
@@ -862,6 +904,22 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
                     Color.getHSBColor(hsb[0], hsb[1], hsb[2])
                 }
             }
+
+        infix fun Color.mixedAbove(other: Color): Color {
+            val a0 = alpha / 255.0f
+            val r0 = red / 255.0f
+            val g0 = green / 255.0f
+            val b0 = blue / 255.0f
+            val a1 = other.alpha / 255.0f
+            val r1 = other.red / 255.0f
+            val g1 = other.green / 255.0f
+            val b1 = other.blue / 255.0f
+            val a01 = (1 - a0) * a1 + a0
+            val r01 = ((1 - a0) * a1 * r1 + a0 * r0) / a01
+            val g01 = ((1 - a0) * a1 * g1 + a0 * g0) / a01
+            val b01 = ((1 - a0) * a1 * b1 + a0 * b0) / a01
+            return Color(r01, g01, b01, a01)
+        }
 
         fun Color.blendWith(other: Color, ratio: Double): Color {
             val iRatio = 1.0f - ratio.coerceIn(0.0, 1.0)
@@ -973,6 +1031,7 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
     }
 
 }
+
 
 private typealias P = Pair<Int, Int>
 
