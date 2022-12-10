@@ -4,12 +4,12 @@ import kotlin.math.absoluteValue
 
 class Day10 : Day(10, 2022, "Cathode-Ray Tube") {
 
-    private data class State(val x: Int = 1)
+    data class State(val x: Int = 1)
 
     private fun noop(s: State): State = s
     private fun add(inc: Int): (State) -> State = { it.copy(x = it.x + inc) }
 
-    private val microOps = input.flatMap {
+    val microOps = input.flatMap {
         val (mne, param) = "$it 0".split(" ")
         when (mne) {
             "noop" -> listOf(::noop)
@@ -18,7 +18,7 @@ class Day10 : Day(10, 2022, "Cathode-Ray Tube") {
         }
     }
 
-    private inline fun simulator(
+    inline fun simulator(
         code: List<(State) -> State>,
         preCycle: (Int, State) -> Unit = { _, _ -> },
         postCycle: (Int, State) -> Unit = { _, _ -> },
