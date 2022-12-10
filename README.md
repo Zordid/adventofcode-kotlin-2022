@@ -23,7 +23,7 @@ If you are into programming, logic, maybe also a little into competition, this o
 |  [7] | No Space Left On Device |      | Let's free up some space on a disk drive.                                                |
 |  [8] | Treetop Tree House      |      | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
 |  [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                 |
-| [10] | Cathode-Ray Tube        |      | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.    |
+| [10] | Cathode-Ray Tube        | YES  | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.    |
 
 ## My logbook of 2022
 
