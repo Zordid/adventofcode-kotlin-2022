@@ -42,7 +42,7 @@ import kotlin.system.measureTimeMillis
  * V2.4.3 - 10/12/2022 add pixel modes for alpha blend drawing
  *
  */
-abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
+abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine") {
 
     private inner class GamePanel(val pixelWidth: Int, val pixelHeight: Int) : JPanel() {
 
@@ -86,11 +86,14 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
 
     }
 
-    private var appName = ""
     var appInfo: Any? = null
         set(value) {
             if (value != field) {
-                title = "$appName - $value"
+                title = when {
+                    value == null -> appName
+                    appName.isNotBlank() -> "$appName - $value"
+                    else -> "$value"
+                }
             }
             field = value
         }
