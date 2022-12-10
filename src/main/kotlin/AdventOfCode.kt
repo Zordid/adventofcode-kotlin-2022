@@ -475,7 +475,7 @@ object AoC {
         System.getenv("AOC_COOKIE")
             ?: object {}.javaClass.getResource("session-cookie")?.readText()?.lines()
                 ?.firstOrNull { it.isNotBlank() }
-            ?: error("Cookie missing")
+            ?: warn("No session cookie in environment or file found, will not be able to talk to AoC server.")
 
     private fun readInputFileOrNull(day: Int, year: Event): List<String>? {
         val file = File(fileNameFor(day, year))
@@ -532,7 +532,7 @@ inline fun useSystemProxies() {
     System.setProperty("java.net.useSystemProxies", "true")
 }
 
-class AoCWebInterface(private val sessionCookie: String) {
+class AoCWebInterface(private val sessionCookie: String?) {
     companion object {
         private const val BASE_URL = "https://adventofcode.com"
         private const val RIGHT = "That's the right answer"
