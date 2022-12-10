@@ -210,14 +210,10 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         while (true) Thread.sleep(10_000)
     }
 
-    /**
-     * Draws a pixel on the screen in the defined color.
-     *
-     * @param pos the coordinates of the pixel to draw
-     * @param color the color to draw
-     */
-    fun draw(pos: P, color: Color = Color.WHITE) =
-        draw(pos.first, pos.second, color)
+    enum class PixelMode { NORMAL, MASK, ALPHA, CUSTOM }
+
+    var pixelMode = NORMAL
+    var blendFactor = 1.0f
 
     private fun getPixel(x: Int, y: Int): Color {
         val pos = y * screenWidth + x
@@ -237,10 +233,14 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         }
     }
 
-    enum class PixelMode { NORMAL, MASK, ALPHA, CUSTOM }
-
-    var pixelMode = NORMAL
-    var blendFactor = 1.0f
+    /**
+     * Draws a pixel on the screen in the defined color.
+     *
+     * @param pos the coordinates of the pixel to draw
+     * @param color the color to draw
+     */
+    fun draw(pos: P, color: Color = Color.WHITE) =
+        draw(pos.first, pos.second, color)
 
     /**
      * Draws a pixel on the screen in the defined color.
@@ -254,9 +254,11 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
             NORMAL -> {
                 setPixel(x, y, color)
             }
+
             MASK -> {
                 if (color.alpha == 255) setPixel(x, y, color)
             }
+
             ALPHA -> {
                 if (color.alpha < 255) {
                     val d = getPixel(x, y)
@@ -269,6 +271,7 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
                 } else
                     setPixel(x, y, color)
             }
+
             CUSTOM -> {
                 TODO()
             }
@@ -459,6 +462,13 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         return Pattern(p)
     }
 
+    /**
+     * Draws a rectangle on the screen in the defined color using the given pattern.
+     *
+     * @param area the area of the rect to draw
+     * @param color the color to use
+     * @param pattern the pattern to use
+     */
     fun drawRect(area: Pair<P, P>, color: Color = Color.WHITE, pattern: Pattern = DEFAULT_PATTERN) {
         drawRect(
             area.first.first, area.first.second,
@@ -496,6 +506,12 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         return p
     }
 
+    /**
+     * Fills a rectangle on the screen in the defined color using the given pattern.
+     *
+     * @param area the area of the rectangle to fill
+     * @param color the color to use for fill
+     */
     fun fillRect(area: Pair<P, P>, color: Color = Color.WHITE) {
         fillRect(
             area.first.first, area.first.second,
@@ -661,7 +677,6 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
             draw(x, y, color)
     }
 
-
     /**
      * Draws text on screen in the defined color.
      *
@@ -753,8 +768,8 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
      * @param scale scale factor
      * @return the width of the text drawn
      */
-    fun drawStringProp(p: Point, text: String, color: Color = Color.WHITE, scale: Int = 1) =
-        drawStringProp(p.x, p.y, text, color, scale)
+    fun drawStringProp(p: P, text: String, color: Color = Color.WHITE, scale: Int = 1) =
+        drawStringProp(p.first, p.second, text, color, scale)
 
     /**
      * Draws text on screen in the defined color using proportional spacing.
@@ -959,24 +974,23 @@ abstract class KPixelGameEngine(appName: String = "KPixelGameEngine") {
         ).map { (it.toInt() shr 4) to (it.toInt() and 15) }
 
         private fun createFontSheet(): BooleanArray {
-            val data = buildString {
-                append("?Q`0001oOch0o01o@F40o0<AGD4090LAGD<090@A7ch0?00O7Q`0600>00000000")
-                append("O000000nOT0063Qo4d8>?7a14Gno94AA4gno94AaOT0>o3`oO400o7QN00000400")
-                append("Of80001oOg<7O7moBGT7O7lABET024@aBEd714AiOdl717a_=TH013Q>00000000")
-                append("720D000V?V5oB3Q_HdUoE7a9@DdDE4A9@DmoE4A;Hg]oM4Aj8S4D84@`00000000")
-                append("OaPT1000Oa`^13P1@AI[?g`1@A=[OdAoHgljA4Ao?WlBA7l1710007l100000000")
-                append("ObM6000oOfMV?3QoBDD`O7a0BDDH@5A0BDD<@5A0BGeVO5ao@CQR?5Po00000000")
-                append("Oc``000?Ogij70PO2D]??0Ph2DUM@7i`2DTg@7lh2GUj?0TO0C1870T?00000000")
-                append("70<4001o?P<7?1QoHg43O;`h@GT0@:@LB@d0>:@hN@L0@?aoN@<0O7ao0000?000")
-                append("OcH0001SOglLA7mg24TnK7ln24US>0PL24U140PnOgl0>7QgOcH0K71S0000A000")
-                append("00H00000@Dm1S007@DUSg00?OdTnH7YhOfTL<7Yh@Cl0700?@Ah0300700000000")
-                append("<008001QL00ZA41a@6HnI<1i@FHLM81M@@0LG81?O`0nC?Y7?`0ZA7Y300080000")
-                append("O`082000Oh0827mo6>Hn?Wmo?6HnMb11MP08@C11H`08@FP0@@0004@000000000")
-                append("00P00001Oab00003OcKP0006@6=PMgl<@440MglH@000000`@000001P00000000")
-                append("Ob@8@@00Ob@8@Ga13R@8Mga172@8?PAo3R@827QoOb@820@0O`0007`0000007P0")
-                append("O`000P08Od400g`<3V=P0G`673IP0`@3>1`00P@6O`P00g`<O`000GP800000000")
-                append("?P9PL020O`<`N3R0@E4HC7b0@ET<ATB0@@l6C4B0O`H3N7b0?P01L3R000000020")
-            }
+            val data = "" +
+                    "?Q`0001oOch0o01o@F40o0<AGD4090LAGD<090@A7ch0?00O7Q`0600>00000000" +
+                    "O000000nOT0063Qo4d8>?7a14Gno94AA4gno94AaOT0>o3`oO400o7QN00000400" +
+                    "Of80001oOg<7O7moBGT7O7lABET024@aBEd714AiOdl717a_=TH013Q>00000000" +
+                    "720D000V?V5oB3Q_HdUoE7a9@DdDE4A9@DmoE4A;Hg]oM4Aj8S4D84@`00000000" +
+                    "OaPT1000Oa`^13P1@AI[?g`1@A=[OdAoHgljA4Ao?WlBA7l1710007l100000000" +
+                    "ObM6000oOfMV?3QoBDD`O7a0BDDH@5A0BDD<@5A0BGeVO5ao@CQR?5Po00000000" +
+                    "Oc``000?Ogij70PO2D]??0Ph2DUM@7i`2DTg@7lh2GUj?0TO0C1870T?00000000" +
+                    "70<4001o?P<7?1QoHg43O;`h@GT0@:@LB@d0>:@hN@L0@?aoN@<0O7ao0000?000" +
+                    "OcH0001SOglLA7mg24TnK7ln24US>0PL24U140PnOgl0>7QgOcH0K71S0000A000" +
+                    "00H00000@Dm1S007@DUSg00?OdTnH7YhOfTL<7Yh@Cl0700?@Ah0300700000000" +
+                    "<008001QL00ZA41a@6HnI<1i@FHLM81M@@0LG81?O`0nC?Y7?`0ZA7Y300080000" +
+                    "O`082000Oh0827mo6>Hn?Wmo?6HnMb11MP08@C11H`08@FP0@@0004@000000000" +
+                    "00P00001Oab00003OcKP0006@6=PMgl<@440MglH@000000`@000001P00000000" +
+                    "Ob@8@@00Ob@8@Ga13R@8Mga172@8?PAo3R@827QoOb@820@0O`0007`0000007P0" +
+                    "O`000P08Od400g`<3V=P0G`673IP0`@3>1`00P@6O`P00g`<O`000GP800000000" +
+                    "?P9PL020O`<`N3R0@E4HC7b0@ET<ATB0@@l6C4B0O`H3N7b0?P01L3R000000020"
 
             val sheet = BooleanArray(128 * 48)
             var px = 0
