@@ -12,24 +12,41 @@ If you are into programming, logic, maybe also a little into competition, this o
 
 ### Overview of the puzzles
 
-| Day | Title                   | Vis? | Notes                                                                                    |
-|----:|-------------------------|------|------------------------------------------------------------------------------------------|
-| [1] | Calorie Counting        |      | Chunks of calories, delimited by blank lines. Split it!                                  |
-| [2] | Rock Paper Scissors     |      | Win against the elves by understanding a cheat sheet                                     |
-| [3] | Rucksack Reorganization |      | A neat thing about sets and intersections                                                |
-| [4] | Camp Cleanup            |      | Play around with ranges and operators                                                    |
-| [5] | Supply Stacks           | YES  | The famous tower of Hanoi with stacks of crates                                          |
-| [6] | Tuning Trouble          |      | String marker detection in a signal - too easy!                                          |
-| [7] | No Space Left On Device |      | Let's free up some space on a disk drive.                                                |
-| [8] | Treetop Tree House      |      | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
-| [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                 |
+|  Day | Title                   | Vis? | Notes                                                                                    |
+|-----:|-------------------------|------|------------------------------------------------------------------------------------------|
+|  [1] | Calorie Counting        |      | Chunks of calories, delimited by blank lines. Split it!                                  |
+|  [2] | Rock Paper Scissors     |      | Win against the elves by understanding a cheat sheet                                     |
+|  [3] | Rucksack Reorganization |      | A neat thing about sets and intersections                                                |
+|  [4] | Camp Cleanup            |      | Play around with ranges and operators                                                    |
+|  [5] | Supply Stacks           | YES  | The famous tower of Hanoi with stacks of crates                                          |
+|  [6] | Tuning Trouble          |      | String marker detection in a signal - too easy!                                          |
+|  [7] | No Space Left On Device |      | Let's free up some space on a disk drive.                                                |
+|  [8] | Treetop Tree House      |      | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
+|  [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                 |
+| [10] | Cathode-Ray Tube        |      | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.    |
 
 ## My logbook of 2022
+
+### [Day 10][10]: Cathode-Ray Tube
+
+Looks like we're back in CPU simulation business! But wait: only two instructions? Do nothing and addx? Turns out, here
+the trick is to simulate micro operations where one instruction takes up longer time to do its work than the other.
+Internally this leads to clock cycles passing by while still working on a portion of a bigger operation.
+Sadly, the instruction reading took way too long - it's kind of complicated when you read "at the start of cycle N",
+then "during cycle" and "at the end". I over engineered my solution providing micro ops and turn my assembler code into
+those first, having a machine that can run only the pre-processed micro ops.
+
+In part 2, a screen comes back that we have already seen last year. Maybe we should write OCR to automatically detect
+the characters displayed?
 
 ### [Day 9][9]: Rope Bridge
 
 Good start today with some internally created problems of my setup... *sigh* I am not yet warmed up in 2022!
-A few changes to my internal checking of demo data lead to a glitch before moving to part 2 - it somehow also checked my not yet given expected result of part 2 - `null`... This forced me to quickly add an expectation for part 2 - and that in turn made me quickly jump to the end, looking for the new expectation, 36.... but wait... I forgot to update the demo data for part 2 and accidentally executed it on the demo input for part 1 which had way too few moves for the tail to start moving a lot. :-/ Lost at least 10 minutes before I noticed that. Bummer!
+A few changes to my internal checking of demo data lead to a glitch before moving to part 2 - it somehow also checked my
+not yet given expected result of part 2 - `null`... This forced me to quickly add an expectation for part 2 - and that
+in turn made me quickly jump to the end, looking for the new expectation, 36.... but wait... I forgot to update the demo
+data for part 2 and accidentally executed it on the demo input for part 1 which had way too few moves for the tail to
+start moving a lot. :-/ Lost at least 10 minutes before I noticed that. Bummer!
 
 But other than that: time for a visualization! Yeah!! ;-) I like these puzzles!
 
@@ -227,3 +244,5 @@ You can solve the puzzle and provide an answer using the language of your choice
 [8]: src/main/kotlin/Day08.kt
 
 [9]: src/main/kotlin/Day09.kt
+
+[10]: src/main/kotlin/Day10.kt

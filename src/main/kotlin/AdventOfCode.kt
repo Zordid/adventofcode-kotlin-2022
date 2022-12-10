@@ -200,18 +200,17 @@ sealed class Day private constructor(
         header
         runWithTiming("1") { part1 }
         runWithTiming("2") { part2 }
-        if (offerSubmit) submit("$part1", "$part2")
+        if (offerSubmit) submit(part1, part2)
     }
 
-    private fun submit(part1: String, part2: String) {
+    private fun submit(part1: Any?, part2: Any?) {
         println()
-        if (part1 == part2) {
+        if ("$part1" == "$part2") {
             aocTerminal.println(yellow("The two answers are identical. No submitting allowed."))
             return
         }
-        listOf(P2 to part2.possibleAnswerOrNull(), P1 to part1.possibleAnswerOrNull()).firstOrNull { it.second != null }
+        listOfNotNull(part2.isPossibleAnswerOrNull(P2), part1.isPossibleAnswerOrNull(P1)).firstOrNull()
             ?.let { (part, answer) ->
-                require(answer != null)
                 with(aocTerminal) {
                     val previouslySubmitted = AoC.previouslySubmitted(day, year, part)
                     if (answer in previouslySubmitted) {
@@ -239,8 +238,10 @@ sealed class Day private constructor(
             }
     }
 
-    private fun Any?.possibleAnswerOrNull(): String? =
-        "$this".takeIf { it !in listOf("null", 0, -1, NotYetImplemented) && it.length > 1 }
+    private fun Any?.isPossibleAnswerOrNull(part: Part): Pair<Part, String>? =
+        (part to "$this").takeIf { (_, sAnswer) ->
+            this !in listOf("null", 0, -1, NotYetImplemented) && sAnswer.length > 1 && "\n" !in sAnswer
+        }
 
     fun <T> T.show(prompt: String = "", maxLines: Int = 10): T {
         if (!verbose) return this

@@ -1,213 +1,217 @@
 import utils.MutableGrid
 import utils.formatted
+import kotlin.math.absoluteValue
 
-class Day10 : Day(10, 2022) {
+class Day10 : Day(10, 2022, "Cathode-Ray Tube") {
 
-    val p = input
+    private data class State(val x: Int = 1)
 
-    data class State(val cycle: Int, val x: Int)
+    private fun noop(s: State): State = s
+    private fun add(inc: Int): (State) -> State = { it.copy(x = it.x + inc) }
 
-
-    override fun part2(): Any? {
-
-        fun noop(s: State): State = s.copy(cycle = s.cycle + 1)
-        fun addx1(s: State): State = noop(s)
-        fun addx2(inc: Int): (State) -> State = { it.copy(it.cycle + 1, it.x + inc) }
-
-        val mops = p.flatMap {
-            val (c, p) = "$it 0".split(" ")
-            when (c) {
-                "noop" -> listOf(::noop)
-                "addx" -> listOf(::addx1, addx2(p.toInt()))
-                else -> error(it)
-            }
+    private val microOps = input.flatMap {
+        val (mne, param) = "$it 0".split(" ")
+        when (mne) {
+            "noop" -> listOf(::noop)
+            "addx" -> listOf(::noop, add(param.toInt()))
+            else -> error(mne)
         }
+    }
 
-
-
-        val screen = MutableGrid(40, 6) { '.' }
-        println(screen.formatted())
-
+    private inline fun simulator(
+        code: List<(State) -> State>,
+        preCycle: (Int, State) -> Unit = { _, _ -> },
+        postCycle: (Int, State) -> Unit = { _, _ -> },
+    ): State {
+        var state = State()
         var cycle = 0
-        var s = State(0, 1)
-        var sum = 0
-        for (l in mops) {
+        for (microOp in code) {
             cycle++
-            val pr = (cycle - 1) / 40
-            val pc = (cycle - 1) % 40
-            val start = s.x-1
-            val sprite = if (start>=0) ".".repeat(start) + "###" else if (start == -1) "##" else if (start==-2) "#" else ""
-            val pixel = sprite.getOrNull(pc)
-            if (pixel == '#')
-                screen[pr][pc] = pixel
-            s = l(s)
-            println(screen.formatted())
+            preCycle(cycle, state)
+            state = microOp(state)
+            postCycle(cycle, state)
         }
+        return state
+    }
 
-        println(screen.formatted())
-        return sum
+    override fun part1(): Int {
+        val cyclesOfInterest = 20..220 step 40
+        var signalStrengthSum = 0
+        simulator(microOps,
+            preCycle = { cycle, state ->
+                if (cycle in cyclesOfInterest)
+                    signalStrengthSum += cycle * state.x
+            })
+        return signalStrengthSum
+    }
+
+    override fun part2(): String {
+        val screen = MutableGrid(40, 6) { ' ' }
+
+        simulator(microOps,
+            preCycle = { cycle, state ->
+                val row = (cycle - 1) / 40
+                val col = (cycle - 1) % 40
+                val drawPixel = (col - state.x).absoluteValue <= 1
+                if (drawPixel)
+                    screen[row][col] = '#'
+            }
+        )
+
+        return screen.formatted()
     }
 
 }
 
 fun main() {
-    solve<Day10>(true) {
-
-
+    solve<Day10> {
         """
+            addx 15
+            addx -11
+            addx 6
+            addx -3
+            addx 5
+            addx -1
+            addx -8
+            addx 13
+            addx 4
             noop
+            addx -1
+            addx 5
+            addx -1
+            addx 5
+            addx -1
+            addx 5
+            addx -1
+            addx 5
+            addx -1
+            addx -35
+            addx 1
+            addx 24
+            addx -19
+            addx 1
+            addx 16
+            addx -11
+            noop
+            noop
+            addx 21
+            addx -15
+            noop
+            noop
+            addx -3
+            addx 9
+            addx 1
+            addx -3
+            addx 8
+            addx 1
+            addx 5
+            noop
+            noop
+            noop
+            noop
+            noop
+            addx -36
+            noop
+            addx 1
+            addx 7
+            noop
+            noop
+            noop
+            addx 2
+            addx 6
+            noop
+            noop
+            noop
+            noop
+            noop
+            addx 1
+            noop
+            noop
+            addx 7
+            addx 1
+            noop
+            addx -13
+            addx 13
+            addx 7
+            noop
+            addx 1
+            addx -33
+            noop
+            noop
+            noop
+            addx 2
+            noop
+            noop
+            noop
+            addx 8
+            noop
+            addx -1
+            addx 2
+            addx 1
+            noop
+            addx 17
+            addx -9
+            addx 1
+            addx 1
+            addx -3
+            addx 11
+            noop
+            noop
+            addx 1
+            noop
+            addx 1
+            noop
+            noop
+            addx -13
+            addx -19
+            addx 1
             addx 3
-            addx -5
-        """.trimIndent()
-
-        """
-    addx 15
-    addx -11
-    addx 6
-    addx -3
-    addx 5
-    addx -1
-    addx -8
-    addx 13
-    addx 4
-    noop
-    addx -1
-    addx 5
-    addx -1
-    addx 5
-    addx -1
-    addx 5
-    addx -1
-    addx 5
-    addx -1
-    addx -35
-    addx 1
-    addx 24
-    addx -19
-    addx 1
-    addx 16
-    addx -11
-    noop
-    noop
-    addx 21
-    addx -15
-    noop
-    noop
-    addx -3
-    addx 9
-    addx 1
-    addx -3
-    addx 8
-    addx 1
-    addx 5
-    noop
-    noop
-    noop
-    noop
-    noop
-    addx -36
-    noop
-    addx 1
-    addx 7
-    noop
-    noop
-    noop
-    addx 2
-    addx 6
-    noop
-    noop
-    noop
-    noop
-    noop
-    addx 1
-    noop
-    noop
-    addx 7
-    addx 1
-    noop
-    addx -13
-    addx 13
-    addx 7
-    noop
-    addx 1
-    addx -33
-    noop
-    noop
-    noop
-    addx 2
-    noop
-    noop
-    noop
-    addx 8
-    noop
-    addx -1
-    addx 2
-    addx 1
-    noop
-    addx 17
-    addx -9
-    addx 1
-    addx 1
-    addx -3
-    addx 11
-    noop
-    noop
-    addx 1
-    noop
-    addx 1
-    noop
-    noop
-    addx -13
-    addx -19
-    addx 1
-    addx 3
-    addx 26
-    addx -30
-    addx 12
-    addx -1
-    addx 3
-    addx 1
-    noop
-    noop
-    noop
-    addx -9
-    addx 18
-    addx 1
-    addx 2
-    noop
-    noop
-    addx 9
-    noop
-    noop
-    noop
-    addx -1
-    addx 2
-    addx -37
-    addx 1
-    addx 3
-    noop
-    addx 15
-    addx -21
-    addx 22
-    addx -6
-    addx 1
-    noop
-    addx 2
-    addx 1
-    noop
-    addx -10
-    noop
-    noop
-    addx 20
-    addx 1
-    addx 2
-    addx 2
-    addx -6
-    addx -11
-    noop
-    noop
-    noop
-""".trimIndent() 
-
+            addx 26
+            addx -30
+            addx 12
+            addx -1
+            addx 3
+            addx 1
+            noop
+            noop
+            noop
+            addx -9
+            addx 18
+            addx 1
+            addx 2
+            noop
+            noop
+            addx 9
+            noop
+            noop
+            noop
+            addx -1
+            addx 2
+            addx -37
+            addx 1
+            addx 3
+            noop
+            addx 15
+            addx -21
+            addx 22
+            addx -6
+            addx 1
+            noop
+            addx 2
+            addx 1
+            noop
+            addx -10
+            noop
+            noop
+            addx 20
+            addx 1
+            addx 2
+            addx 2
+            addx -6
+            addx -11
+            noop
+            noop
+            noop
+        """.trimIndent() part1 13140
     }
 }
