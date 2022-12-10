@@ -1,6 +1,5 @@
 import utils.*
 import java.awt.Color
-import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 fun main() {
@@ -47,7 +46,7 @@ class Day10Vis : KPixelGameEngine("AoC 2022 in Kotlin Day 10 - CRT") {
             val (cycle, x) = current
             val col = (cycle - 1) % 40
             val row = (cycle - 1) / 40
-            val drawPixel = (col - x).absoluteValue <= 1
+            val drawPixel = x in col - 1..col + 1
             if (drawPixel)
                 screen[col to row] = 1.0
 

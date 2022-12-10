@@ -1,6 +1,5 @@
 import utils.MutableGrid
 import utils.formatted
-import kotlin.math.absoluteValue
 
 class Day10 : Day(10, 2022, "Cathode-Ray Tube") {
 
@@ -52,7 +51,7 @@ class Day10 : Day(10, 2022, "Cathode-Ray Tube") {
             preCycle = { cycle, state ->
                 val row = (cycle - 1) / 40
                 val col = (cycle - 1) % 40
-                val drawPixel = (col - state.x).absoluteValue <= 1
+                val drawPixel = state.x in col - 1..col + 1
                 if (drawPixel)
                     screen[row][col] = '#'
             }
