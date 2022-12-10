@@ -1,4 +1,5 @@
-import utils.*
+import utils.MutableGrid
+import utils.formatted
 
 class Day10 : Day(10, 2022) {
 
@@ -7,40 +8,43 @@ class Day10 : Day(10, 2022) {
     data class State(val cycle: Int, val x: Int)
 
 
-
     override fun part2(): Any? {
 
-        fun noop(s: State): State = s.copy(cycle=s.cycle+1)
+        fun noop(s: State): State = s.copy(cycle = s.cycle + 1)
         fun addx1(s: State): State = noop(s)
-        fun addx2( inc: Int): (State)->State = { it.copy(it.cycle+1, it.x+inc)}
+        fun addx2(inc: Int): (State) -> State = { it.copy(it.cycle + 1, it.x + inc) }
 
         val mops = p.flatMap {
             val (c, p) = "$it 0".split(" ")
             when (c) {
-                "noop"-> listOf(::noop)
-                "addx"-> listOf(::addx1, addx2(p.toInt()))
+                "noop" -> listOf(::noop)
+                "addx" -> listOf(::addx1, addx2(p.toInt()))
                 else -> error(it)
             }
         }
 
 
-        val ci = listOf(20, 60, 100, 140, 180, 220)
+
+        val screen = MutableGrid(40, 6) { '.' }
+        println(screen.formatted())
 
         var cycle = 0
         var s = State(0, 1)
         var sum = 0
-        for (l in mops.asInfiniteSequence()) {
+        for (l in mops) {
             cycle++
-            println("Start of $cycle, $s")
-            if (cycle in ci) {
-                sum += cycle * s.x
-            }
-
+            val pr = (cycle - 1) / 40
+            val pc = (cycle - 1) % 40
+            val start = s.x-1
+            val sprite = if (start>=0) ".".repeat(start) + "###" else if (start == -1) "##" else if (start==-2) "#" else ""
+            val pixel = sprite.getOrNull(pc)
+            if (pixel == '#')
+                screen[pr][pc] = pixel
             s = l(s)
-            if (cycle>ci.last()) break
+            println(screen.formatted())
         }
 
-
+        println(screen.formatted())
         return sum
     }
 
@@ -56,7 +60,7 @@ fun main() {
             addx -5
         """.trimIndent()
 
-"""
+        """
     addx 15
     addx -11
     addx 6
@@ -203,7 +207,7 @@ fun main() {
     noop
     noop
     noop
-""".trimIndent() part1 13140
+""".trimIndent() 
 
     }
 }
