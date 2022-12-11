@@ -1,4 +1,5 @@
 ### Contained within this Repo: a *very* rudimentary clone of OLC's [PixelGameEngine][1] in a Kotlin version by me.
+### Make sure to hop over to the original [olcPixelGameEngine](https://github.com/OneLoneCoder/olcPixelGameEngine) and make sure to follow [OLC on YouTube](https://www.youtube.com/@javidx9) 
 
 # License (OLC-3)
 
