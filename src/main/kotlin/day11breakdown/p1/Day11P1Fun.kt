@@ -54,8 +54,25 @@ class Day11P1Fun : Day(11, 2022, "Monkey in the Middle") {
         return inspections
     }
 
+    // Attention: this even "more functional way" might make your head explode. Be careful!
+    fun letTheMonkeysPlayMoreFunctional(rounds: Int): List<Int> {
+        return (1..rounds).fold(List(monkeys.size) { 0 } to startItems) { (inspections, state), _ ->
+            monkeys.fold(inspections to state) { (inspections, state), monkey ->
+                val currentlyHolds = state[monkey.id]
+                val (newInspections, newState) = currentlyHolds.fold(inspections to state) { (inspections, state), worryLevel ->
+                    val (newLevel, toMoney) = monkey.playWithItemOfWorryLevel(worryLevel)
+                    inspections.copy(monkey.id to inspections[monkey.id] + 1) to state.copy(
+                        toMoney to state[toMoney] + newLevel
+                    )
+                }
+                newInspections to newState.copy(monkey.id to emptyList())
+            }
+        }.first
+    }
+
     override fun part1(): Long {
         val totalInspections = letTheMonkeysPlay(20)
+        // val totalInspections = letTheMonkeysPlayMoreFunctional(20)
         return totalInspections.sortedDescending().take(2).product()
     }
 
@@ -65,6 +82,10 @@ fun main() {
     solve<Day11P1Fun> {
         day11DemoInput part1 10605
     }
+}
+
+fun <T : Any> List<T>.copy(vararg changes: Pair<Int, T>) = List(size) { idx ->
+    changes.singleOrNull { it.first == idx }?.second ?: this[idx]
 }
 
 private fun createMonkeyFromPuzzle(id: Int, s: List<String>): Monkey {
