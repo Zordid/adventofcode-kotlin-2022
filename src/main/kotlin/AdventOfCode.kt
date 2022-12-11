@@ -47,7 +47,7 @@ private fun getAllDayClasses(): Set<Class<out Day>> =
 @ExperimentalTime
 private fun Class<out Day>.execute(): Duration {
     val day = constructors[0].newInstance() as Day
-    print("${day.day}: ${day.title}".paddedTo(30, 30))
+    print("${day.day}: ${day.title}".restrictWidth(30, 30))
     val part1 = measureTimedValue { day.part1 }
     println("Part 1 [${part1.duration}]: ${part1.value}")
     print(" ".repeat(30))
@@ -265,10 +265,10 @@ open class Day private constructor(
             val original = rawInput.getOrNull(idx)
             val s = when {
                 rawInput.size != this.size -> "$data"
-                original != "$data" -> "${original.paddedTo(40, 40)} => $data"
+                original != "$data" -> "${original.restrictWidth(40, 40)} => $data"
                 else -> original
             }
-            println("${idx.toString().padStart(idxWidth)}: ${s.paddedTo(0, 160)}")
+            println("${idx.toString().padStart(idxWidth)}: ${s.restrictWidth(0, 160)}")
         }
         println("=".repeat(50))
         return this
@@ -368,14 +368,13 @@ inline fun <reified T : Any> String.extractAllNumbers(
     else -> error("Cannot extract numbers of type ${klass.simpleName}")
 } as List<T>
 
-private fun Any?.paddedTo(minWidth: Int, maxWidth: Int) = with(this.toString()) {
+private fun Any?.restrictWidth(minWidth: Int, maxWidth: Int) = with("$this") {
     when {
-        length > maxWidth -> this.substring(0, maxWidth - 3) + "..."
-        length < minWidth -> this.padEnd(minWidth)
+        length > maxWidth -> substring(0, maxWidth - 3) + "..."
+        length < minWidth -> padEnd(minWidth)
         else -> this
     }
 }
-
 
 object AoC {
 

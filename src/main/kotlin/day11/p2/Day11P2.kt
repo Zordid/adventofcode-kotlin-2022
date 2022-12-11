@@ -1,8 +1,20 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "DuplicatedCode")
 
+package day11.p2
+
+import Day
+import day11DemoInput
+import extractAllIntegers
+import extractAllNumbers
+import solve
 import utils.lcm
 import utils.product
 
+/**
+ * one "problem" in Kotlin is that once you started with Int numbers and *then* need to deal with larger
+ * types, it is a nightmare to modify the code... a typealias can help, but it's still not "free" at all due
+ * to functions needed like [toInt] vs [toLong]
+ */
 typealias WorryLevel = Long
 
 fun String.toWorryLevel(): WorryLevel? = toLongOrNull()
@@ -16,19 +28,27 @@ data class Monkey(
     val ifFalse: Int,
 )
 
-class Day11 : Day(11, 2022, "Monkey in the Middle") {
+class Day11P2 : Day(11, 2022, "Monkey in the Middle") {
 
     val monkeys = inputAsGroups.mapIndexed(::createMonkeyFromPuzzle)
     val startItems: List<List<WorryLevel>> = inputAsGroups.map { it[1].extractAllNumbers() }
 
-    context (PlanetContext)
-    private fun Monkey.playWithItemOfWorryLevel(worryLevel: WorryLevel): Pair<WorryLevel, Int> {
-        val newWorryLevel = operation(worryLevel).treatOnThisPlanet()
+    // From each individual Monkey's perspective, its "world" can be seen as a modulus world!
+    // Its only action depends on my worry level - but e.g.
+    //  - a Monkey with testDivisor 3 treats 0, 3, 6, 9, 12, 15 all alike - it does not "see" a difference in them!
+    //  - a Monkey with testDivisor 5 treats 0, 5, 10, 15 all alike
+    //
+    // As those two Monkeys share a common world, they *both* treat all numbers in modulus world 15 identical!
+    // => this is the least common multiple of their respective divisors.
+
+    val commonModulus = monkeys.map { it.testDivisor }.lcm().toInt()
+
+    fun Monkey.playWithItemOfWorryLevel(worryLevel: WorryLevel): Pair<WorryLevel, Int> {
+        val newWorryLevel = operation(worryLevel) % commonModulus
         val throwTo = if (newWorryLevel divisibleBy testDivisor) ifTrue else ifFalse
         return newWorryLevel to throwTo
     }
 
-    context (PlanetContext)
     fun letTheMonkeysPlay(rounds: Int): IntArray {
         val inspections = IntArray(monkeys.size)
         val currentState = startItems.map { it.toMutableList() }
@@ -47,40 +67,16 @@ class Day11 : Day(11, 2022, "Monkey in the Middle") {
         return inspections
     }
 
-    override fun part1(): Long {
-        with(DivisionPlanet(3)) {
-            val totalInspections = letTheMonkeysPlay(20)
-            return totalInspections.sortedDescending().take(2).product()
-        }
-    }
-
     override fun part2(): Long {
-        val commonModulus = monkeys.map { it.testDivisor }.lcm().toInt()
-        println("All monkeys happily live together in a modulus $commonModulus world!")
-
-        with(ModulusPlanet(commonModulus)) {
-            val totalInspections = letTheMonkeysPlay(10_000)
-            return totalInspections.sortedDescending().take(2).product()
-        }
-    }
-
-    interface PlanetContext {
-        fun WorryLevel.treatOnThisPlanet(): WorryLevel
-    }
-
-    class DivisionPlanet(val divisor: Int) : PlanetContext {
-        override fun WorryLevel.treatOnThisPlanet(): WorryLevel = this / divisor
-    }
-
-    class ModulusPlanet(val modulus: Int) : PlanetContext {
-        override fun WorryLevel.treatOnThisPlanet(): WorryLevel = this % modulus
+        val totalInspections = letTheMonkeysPlay(10_000)
+        return totalInspections.sortedDescending().take(2).product()
     }
 
 }
 
 fun main() {
-    solve<Day11> {
-        day11DemoInput part1 10605 part2 2713310158
+    solve<Day11P2> {
+        day11DemoInput part2 2713310158
     }
 }
 
@@ -103,33 +99,3 @@ private fun createOperation(s: String): (WorryLevel) -> WorryLevel =
             else -> error(s)
         }
     }
-
-val day11DemoInput = """
-Monkey 0:
-  Starting items: 79, 98
-  Operation: new = old * 19
-  Test: divisible by 23
-    If true: throw to monkey 2
-    If false: throw to monkey 3
-
-Monkey 1:
-  Starting items: 54, 65, 75, 74
-  Operation: new = old + 6
-  Test: divisible by 19
-    If true: throw to monkey 2
-    If false: throw to monkey 0
-
-Monkey 2:
-  Starting items: 79, 60, 97
-  Operation: new = old * old
-  Test: divisible by 13
-    If true: throw to monkey 1
-    If false: throw to monkey 3
-
-Monkey 3:
-  Starting items: 74
-  Operation: new = old + 3
-  Test: divisible by 17
-    If true: throw to monkey 0
-    If false: throw to monkey 1
-""".trimIndent()
