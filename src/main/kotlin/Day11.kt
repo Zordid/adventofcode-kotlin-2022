@@ -1,72 +1,113 @@
+@file:Suppress("MemberVisibilityCanBePrivate", "DuplicatedCode")
+
 import utils.lcm
 import utils.product
 
-class Day11 : Day(11, 2022) {
+typealias WorryLevel = Long
 
-    val p = inputAsGroups.map {
-        val (items, op, t, tr, fa) = it.drop(1)
-        M(
-            items.extractAllLongs().toMutableList(),
-            getOp(op.substringAfter("new = ")),
-            t.extractAllLongs().single(),
-            tr.extractAllIntegers().single(),
-            fa.extractAllIntegers().single(),
-        )
+fun String.toWorryLevel(): WorryLevel? = toLongOrNull()
+infix fun WorryLevel.divisibleBy(divisor: Int) = this % divisor == 0L
+
+data class Monkey(
+    val operation: (WorryLevel) -> WorryLevel,
+    val testDivisor: Int,
+    val ifTrue: Int,
+    val ifFalse: Int,
+)
+
+class Day11 : Day(11, 2022, "Monkey in the Middle") {
+
+    val monkeys = inputAsGroups.map(::createMonkeyFromPuzzle)
+    val startItems: List<List<WorryLevel>> = inputAsGroups.map { it[1].extractAllNumbers() }
+
+    context (PlanetContext)
+    private fun Monkey.playWithItemOfWorryLevel(worryLevel: WorryLevel): Pair<WorryLevel, Int> {
+        val newWorryLevel = operation(worryLevel).treatOnThisPlanet()
+        val throwTo = if (newWorryLevel divisibleBy testDivisor) ifTrue else ifFalse
+        return newWorryLevel to throwTo
     }
 
-    val base = p.map { it.test }.lcm()!!
+    context (PlanetContext)
+    fun letTheMonkeysPlay(rounds: Int): List<Int> {
+        val inspections = MutableList(monkeys.size) { 0 }
+        val currentState = startItems.map { it.toMutableList() }
 
-    fun getOp(s: String): (Long) -> Long {
-        val (o1, o, o2) = s.split(" ")
+        repeat(rounds) {
+            monkeys.forEachIndexed { idx, monkey ->
+                val currentlyHolds = currentState[idx]
 
-        return when (o) {
-            "+" -> { old -> o1.toLongOrNull()?:old + (o2.toLongOrNull()?:old) }
-            "*" -> { old -> o1.toLongOrNull()?:old * (o2.toLongOrNull()?:old) }
-            else -> error(s)
-        }
-    }
-
-    inner  class M(val wl: MutableList<Long>, val operation: (Long) -> Long, val test: Long, val t: Int, val f: Int,
-        var inspections: Int = 0) {
-
-        fun inspections() {
-            wl.forEach {
-                inspections++
-                val nlevel = operation(it) % base
-                if (nlevel % test == 0L) {
-                    p[t].wl += nlevel
-                } else {
-                    p[f].wl += nlevel
+                currentlyHolds.forEach {
+                    inspections[idx]++
+                    val (newLevel, toMonkey) = monkey.playWithItemOfWorryLevel(it)
+                    currentState[toMonkey] += newLevel
                 }
+                currentlyHolds.clear()
             }
-            wl.clear()
         }
 
-        override fun toString(): String {
-            return wl.toString()
+        return inspections
+    }
+
+    override fun part1(): Long {
+        with(DivisionPlanet(3)) {
+            val totalInspections = letTheMonkeysPlay(20)
+            return totalInspections.sortedDescending().take(2).product()
         }
     }
 
-    override fun part2(): Any? {
+    override fun part2(): Long {
+        val commonModulus = monkeys.map { it.testDivisor }.lcm().toInt()
+        println("All monkeys happily live together in a modulus $commonModulus world!")
 
-        println(base)
-
-        repeat(10_000) {
-            p.forEach { it.inspections() }
+        with(ModulusPlanet(commonModulus)) {
+            val totalInspections = letTheMonkeysPlay(10_000)
+            return totalInspections.sortedDescending().take(2).product()
         }
+    }
 
-        p.forEach { println(it.inspections) }
+    interface PlanetContext {
+        fun WorryLevel.treatOnThisPlanet(): WorryLevel
+    }
 
-        return p.sortedByDescending { it.inspections }.map { it.inspections }.take(2).product()
+    class DivisionPlanet(val divisor: Int) : PlanetContext {
+        override fun WorryLevel.treatOnThisPlanet(): WorryLevel = this / divisor
+    }
+
+    class ModulusPlanet(val modulus: Int) : PlanetContext {
+        override fun WorryLevel.treatOnThisPlanet(): WorryLevel = this % modulus
     }
 
 }
 
 fun main() {
-    solve<Day11>(true) {
+    solve<Day11> {
 
-"""
-    Monkey 0:
+        day11DemoInput part1 10605 part2 2713310158
+
+    }
+}
+
+private fun createMonkeyFromPuzzle(s: List<String>): Monkey {
+    val (o, t, tr, fa) = s.drop(2)
+    return Monkey(
+        createOperation(o.substringAfter("new = ")),
+        t.extractAllIntegers().single(),
+        tr.extractAllIntegers().single(),
+        fa.extractAllIntegers().single(),
+    )
+}
+
+private fun createOperation(s: String): (WorryLevel) -> WorryLevel =
+    s.split(" ").let { (_, operator, op2) ->
+        when (operator) {
+            "+" -> { old -> old + (op2.toWorryLevel() ?: old) }
+            "*" -> { old -> old * (op2.toWorryLevel() ?: old) }
+            else -> error(s)
+        }
+    }
+
+val day11DemoInput = """
+Monkey 0:
   Starting items: 79, 98
   Operation: new = old * 19
   Test: divisible by 23
@@ -93,7 +134,4 @@ Monkey 3:
   Test: divisible by 17
     If true: throw to monkey 0
     If false: throw to monkey 1
-""".trimIndent() part2 2713310158
-
-    }
-}
+""".trimIndent()

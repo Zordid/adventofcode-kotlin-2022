@@ -45,7 +45,7 @@ tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions {
         jvmTarget = "17"
         //languageVersion = "1.9"
-        //freeCompilerArgs = listOf("-Xcontext-receivers")
+        freeCompilerArgs = listOf("-Xcontext-receivers")
     }
 }
 

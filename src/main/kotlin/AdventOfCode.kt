@@ -133,7 +133,7 @@ class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
 var verbose = true
 
 @Suppress("MemberVisibilityCanBePrivate")
-sealed class Day private constructor(
+open class Day private constructor(
     val fqd: FQD,
     val title: String,
     private val terminal: Terminal,
@@ -335,13 +335,14 @@ private fun String.extractInt() = toIntOrNull() ?: sequenceContainedIntegers().f
 private fun String.extractLong() = toLongOrNull() ?: sequenceContainedLongs().first()
 
 private val numberRegex = Regex("(-+)?\\d+")
+private val positiveNumberRegex = Regex("\\d+")
 
-fun String.sequenceContainedIntegers(): Sequence<Int> =
-    numberRegex.findAll(this)
+fun String.sequenceContainedIntegers(includeNegativeNumbers: Boolean = true): Sequence<Int> =
+    (if (includeNegativeNumbers) numberRegex else positiveNumberRegex).findAll(this)
         .mapNotNull { m -> m.value.toIntOrNull() ?: warn("Number too large for Int: ${m.value}") }
 
-fun String.sequenceContainedLongs(): Sequence<Long> =
-    numberRegex.findAll(this)
+fun String.sequenceContainedLongs(includeNegativeNumbers: Boolean = true): Sequence<Long> =
+    (if (includeNegativeNumbers) numberRegex else positiveNumberRegex).findAll(this)
         .mapNotNull { m -> m.value.toLongOrNull() ?: warn("Number too large for Long: ${m.value}") }
 
 private fun <T> warn(msg: String): T? {
@@ -349,8 +350,23 @@ private fun <T> warn(msg: String): T? {
     return null
 }
 
-fun String.extractAllIntegers(): List<Int> = sequenceContainedIntegers().toList()
-fun String.extractAllLongs(): List<Long> = sequenceContainedLongs().toList()
+fun String.extractAllIntegers(includeNegativeNumbers: Boolean = true): List<Int> =
+    sequenceContainedIntegers(includeNegativeNumbers).toList()
+
+fun String.extractAllLongs(includeNegativeNumbers: Boolean = true): List<Long> =
+    sequenceContainedLongs(includeNegativeNumbers).toList()
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T : Any> String.extractAllNumbers(
+    includeNegativeNumbers: Boolean = true,
+    klass: KClass<T> = T::class,
+): List<T> = when (klass) {
+    Int::class -> extractAllIntegers(includeNegativeNumbers)
+    UInt::class -> extractAllIntegers(false).map { it.toUInt() }
+    Long::class -> extractAllLongs(includeNegativeNumbers)
+    ULong::class -> extractAllLongs(false).map { it.toULong() }
+    else -> error("Cannot extract numbers of type ${klass.simpleName}")
+} as List<T>
 
 private fun Any?.paddedTo(minWidth: Int, maxWidth: Int) = with(this.toString()) {
     when {

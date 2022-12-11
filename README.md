@@ -24,8 +24,38 @@ If you are into programming, logic, maybe also a little into competition, this o
 |  [8] | Treetop Tree House      |      | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
 |  [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                 |
 | [10] | Cathode-Ray Tube        | YES  | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.    |
+| [11] | Monkey in the Middle    |      | Let some monkey's play around with items and get worried about it. Modulus Arithmetics!  |
 
 ## My logbook of 2022
+
+### [Day 11][11]: Monkey in the Middle
+
+This puzzle starts out with parsing a description about a number of Monkeys and their specific behaviour, so the first
+question here is: do I want to *model* this properly or hack my way through the puzzle? Somehow, I went modelling this
+way, soon to find out the first question is: to be mutable or not to be mutable? ;-)
+
+Went the mutable way first, but quickly regretted that decision as the Monkeys throw items at each other, so every
+Monkey needs "access" to all the other ones. This quickly gets messy.
+
+But, hey, this is AoC and at 6 in the morning, I got little other things to do - so I went for it.
+
+Part 1 basically could be solved by properly simulating the game of the Monkeys.
+
+But for part 2, I quickly new this is not going to be done without thinking about the problem. First problem was that
+modelling the worry level as an `Int` in Kotlin leads to horrible change of data type to at least `Long`... but I also
+fell into the trap to at least try to brute force this and use `BigInteger` for a literally arbitrarily large number of
+a worry level.
+No. Does not work. The numbers grow and the calculation speed decreases as the machine eats up memory more and more.
+
+The solution to this one lies in understanding "the world of a Monkey". As its only decision made is based on a division
+remainder, each and every Monkey's world can be restricted to
+a [modular arithmetic](https://en.wikipedia.org/wiki/Modular_arithmetic) without the Monkey even noticing the
+difference. But as there are several Monkeys interacting, the trick is to find the least common multiple of each
+individual Monkey's own modulus and use that for modulus for all of their actions.
+
+Applying `% modulus` on the new worry levels keeps the numbers nice and small and 10,000 iterations is not a problem at
+all. So, the code from part 1 runs almost unaltered to before.
+
 
 ### [Day 10][10]: Cathode-Ray Tube
 
@@ -246,3 +276,5 @@ You can solve the puzzle and provide an answer using the language of your choice
 [9]: src/main/kotlin/Day09.kt
 
 [10]: src/main/kotlin/Day10.kt
+
+[11]: src/main/kotlin/Day11.kt
