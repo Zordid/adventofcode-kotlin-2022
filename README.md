@@ -21,7 +21,7 @@ If you are into programming, logic, maybe also a little into competition, this o
 |  [5] | Supply Stacks           | YES  | The famous tower of Hanoi with stacks of crates                                          |
 |  [6] | Tuning Trouble          |      | String marker detection in a signal - too easy!                                          |
 |  [7] | No Space Left On Device |      | Let's free up some space on a disk drive.                                                |
-|  [8] | Treetop Tree House      |      | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
+|  [8] | Treetop Tree House      | YES  | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
 |  [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                 |
 | [10] | Cathode-Ray Tube        | YES  | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.    |
 | [11] | Monkey in the Middle    |      | Let some monkey's play around with items and get worried about it. Modulus Arithmetics!  |
@@ -55,7 +55,6 @@ individual Monkey's own modulus and use that for modulus for all of their action
 
 Applying `% modulus` on the new worry levels keeps the numbers nice and small and 10,000 iterations is not a problem at
 all. So, the code from part 1 runs almost unaltered to before.
-
 
 ### [Day 10][10]: Cathode-Ray Tube
 
