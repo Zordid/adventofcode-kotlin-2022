@@ -16,6 +16,8 @@ interface Animation {
     fun update()
 }
 
+val Animation?.active get() = this?.ended == false
+
 infix fun Animation.then(next: Animation) = CombinedAnimation(this, next)
 
 class Action(val code: () -> Unit) : Animation {
@@ -50,13 +52,21 @@ class SingleAnimation(duration: Duration, fps: Int, val code: AnimationContext.(
     }
 }
 
-abstract class AnimatedValue<T> {
+abstract class AnimatedValue<T>(val context: AnimationContext) {
     abstract val value: T
-    abstract operator fun getValue(nothing: Nothing?, property: KProperty<*>): T
+    operator fun getValue(nothing: Nothing?, property: KProperty<*>): T = value
 }
 
-class AnimatedInt(private val first: Int, private val last: Int, private val context: AnimationContext) :
-    AnimatedValue<Int>() {
+class AnimatedPoint(first: Point, last: Point, context: AnimationContext) : AnimatedValue<Point>(context) {
+    private val xAnim = AnimatedInt(first.x, last.x, context)
+    private val yAnim = AnimatedInt(first.y, last.y, context)
+    override val value: Point
+        get() = xAnim.value to yAnim.value
+
+}
+
+class AnimatedInt(private val first: Int, private val last: Int, context: AnimationContext) :
+    AnimatedValue<Int>(context) {
     private val size = (last - first).absoluteValue
     private val dir = if (last > first) 1 else -1
     override val value: Int
@@ -71,16 +81,13 @@ class AnimatedInt(private val first: Int, private val last: Int, private val con
             }
         }
 
-
-    override operator fun getValue(nothing: Nothing?, property: KProperty<*>): Int {
-        return value
-    }
-
 }
 
 class AnimationContext(val totalFrames: Long) {
     var currentFrame = 0L
     fun animate(from: Int, to: Int) = AnimatedInt(from, to, this)
+    fun animate(from: Point, to: Point) = AnimatedPoint(from, to, this)
+
     fun onStart(code: () -> Unit) {
         if (currentFrame == 0L) code()
     }
