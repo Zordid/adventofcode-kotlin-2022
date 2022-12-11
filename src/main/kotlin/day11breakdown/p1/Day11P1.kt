@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-package day11.p1
+package day11breakdown.p1
 
 import Day
 import day11DemoInput

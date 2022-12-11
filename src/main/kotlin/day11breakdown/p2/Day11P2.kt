@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "DuplicatedCode")
 
-package day11.p2
+package day11breakdown.p2
 
 import Day
 import day11DemoInput

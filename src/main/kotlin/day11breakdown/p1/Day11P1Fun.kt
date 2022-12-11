@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "DuplicatedCode")
 
-package day11.p1
+package day11breakdown.p1
 
 import Day
 import day11DemoInput
@@ -25,7 +25,7 @@ data class Monkey(
 // could also use a Pair<Int, Int> instead, but this one might read better
 data class MonkeyPlayResult(val newWorryLevel: Int, val throwTo: Int)
 
-class Day11 : Day(11, 2022, "Monkey in the Middle") {
+class Day11P1Fun : Day(11, 2022, "Monkey in the Middle") {
 
     val monkeys = inputAsGroups.mapIndexed(::createMonkeyFromPuzzle)
     val startItems: List<List<Int>> = inputAsGroups.map { it[1].extractAllNumbers() }
@@ -62,7 +62,7 @@ class Day11 : Day(11, 2022, "Monkey in the Middle") {
 }
 
 fun main() {
-    solve<Day11> {
+    solve<Day11P1Fun> {
         day11DemoInput part1 10605
     }
 }
