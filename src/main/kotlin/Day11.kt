@@ -1,3 +1,4 @@
+import utils.lcm
 import utils.product
 
 class Day11 : Day(11, 2022) {
@@ -5,48 +6,36 @@ class Day11 : Day(11, 2022) {
     val p = inputAsGroups.map {
         val (items, op, t, tr, fa) = it.drop(1)
         M(
-            items.extractAllIntegers().toMutableList(),
+            items.extractAllLongs().toMutableList(),
             getOp(op.substringAfter("new = ")),
-            getTest(t.substringAfter("Test: ")),
+            t.extractAllLongs().single(),
             tr.extractAllIntegers().single(),
             fa.extractAllIntegers().single(),
         )
     }
 
-    fun getOp(s: String): (Int) -> Int {
+    val base = p.map { it.test }.lcm()!!
+
+    fun getOp(s: String): (Long) -> Long {
         val (o1, o, o2) = s.split(" ")
 
         return when (o) {
-            "+" -> { old -> o1.toIntOrNull()?:old + (o2.toIntOrNull()?:old) }
-            "*" -> { old -> o1.toIntOrNull()?:old * (o2.toIntOrNull()?:old) }
-            "-" -> { old -> o1.toIntOrNull()?:old - (o2.toIntOrNull()?:old) }
-            "/" -> { old -> o1.toIntOrNull()?:old / (o2.toIntOrNull()?:old) }
+            "+" -> { old -> o1.toLongOrNull()?:old + (o2.toLongOrNull()?:old) }
+            "*" -> { old -> o1.toLongOrNull()?:old * (o2.toLongOrNull()?:old) }
             else -> error(s)
         }
     }
 
-    fun getTest(s: String): (Int) -> Boolean {
-        val (d, _, b) = s.split(" ")
-        return when (d) {
-            "divisible" -> { i -> i % b.toInt() == 0 }
-            else -> error(s)
-        }
-    }
-
-    inner  class M(val wl: MutableList<Int>, val operation: (Int) -> Int, val test: (Int) -> Boolean, val t: Int, val f: Int,
+    inner  class M(val wl: MutableList<Long>, val operation: (Long) -> Long, val test: Long, val t: Int, val f: Int,
         var inspections: Int = 0) {
 
         fun inspections() {
             wl.forEach {
                 inspections++
-                println("inspecting $it")
-                val nlevel = operation(it) / 3
-                println("now $nlevel")
-                if (test(nlevel)) {
-                    println("throw at $t")
+                val nlevel = operation(it) % base
+                if (nlevel % test == 0L) {
                     p[t].wl += nlevel
                 } else {
-                    println("throw at $f")
                     p[f].wl += nlevel
                 }
             }
@@ -58,19 +47,14 @@ class Day11 : Day(11, 2022) {
         }
     }
 
-    override fun part1(): Any? {
+    override fun part2(): Any? {
 
+        println(base)
 
-        repeat(20) {
-            println("After round $it")
-            p.forEach { println(it) }
+        repeat(10_000) {
             p.forEach { it.inspections() }
-            println()
         }
-        println("After end")
-        p.forEach { println(it) }
 
-        println()
         p.forEach { println(it.inspections) }
 
         return p.sortedByDescending { it.inspections }.map { it.inspections }.take(2).product()
@@ -109,7 +93,7 @@ Monkey 3:
   Test: divisible by 17
     If true: throw to monkey 0
     If false: throw to monkey 1
-""".trimIndent() part1 10605
+""".trimIndent() part2 2713310158
 
     }
 }
