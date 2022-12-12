@@ -2,26 +2,31 @@ package utils
 
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import kotlin.reflect.KProperty
 import kotlin.time.Duration
 
-fun KPixelGameEngine.animation(duration: Duration, code: AnimationContext.() -> Unit): Animation {
-    return SingleAnimation(duration, limitFps, code)
+fun KPixelGameEngine.animation(duration: Duration, fps: Int = limitFps, code: AnimationContext.() -> Unit): Animation {
+    return SingleAnimation(duration, fps, code)
 }
 
 fun action(code: () -> Unit): Animation = Action(code)
 
 interface Animation {
+    val frames: Long
     val ended: Boolean
     fun update()
 }
 
 val Animation?.active get() = this?.ended == false
+val Animation?.ended get() = this?.ended == true
 
 infix fun Animation.then(next: Animation) = CombinedAnimation(this, next)
 
 class Action(val code: () -> Unit) : Animation {
     private var hasRun = false
+    override val frames: Long
+        get() = 1
     override val ended: Boolean
         get() = hasRun
 
@@ -31,6 +36,8 @@ class Action(val code: () -> Unit) : Animation {
 }
 
 class CombinedAnimation(private val first: Animation, private val second: Animation) : Animation {
+    override val frames: Long
+        get() = first.frames + second.frames
     override val ended: Boolean
         get() = second.ended
 
@@ -40,9 +47,9 @@ class CombinedAnimation(private val first: Animation, private val second: Animat
 }
 
 class SingleAnimation(duration: Duration, fps: Int, val code: AnimationContext.() -> Unit) : Animation {
-    override val ended: Boolean get() = context.currentFrame >= totalFrames
-    private val totalFrames = (fps * duration.inWholeMilliseconds / 1000).coerceAtLeast(1)
-    private val context = AnimationContext(totalFrames)
+    override val ended: Boolean get() = context.currentFrame >= frames
+    override val frames = (duration.inWholeMilliseconds / 1000.0 * fps).roundToLong().coerceAtLeast(1)
+    private val context = AnimationContext(frames)
 
     override fun update() {
         if (!ended) {
