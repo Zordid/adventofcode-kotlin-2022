@@ -12,23 +12,32 @@ If you are into programming, logic, maybe also a little into competition, this o
 
 ### Overview of the puzzles
 
-|  Day | Title                   | Vis? | Notes                                                                                    |
-|-----:|-------------------------|------|------------------------------------------------------------------------------------------|
-|  [1] | Calorie Counting        |      | Chunks of calories, delimited by blank lines. Split it!                                  |
-|  [2] | Rock Paper Scissors     |      | Win against the elves by understanding a cheat sheet                                     |
-|  [3] | Rucksack Reorganization |      | A neat thing about sets and intersections                                                |
-|  [4] | Camp Cleanup            |      | Play around with ranges and operators                                                    |
-|  [5] | Supply Stacks           | YES  | The famous tower of Hanoi with stacks of crates                                          |
-|  [6] | Tuning Trouble          |      | String marker detection in a signal - too easy!                                          |
-|  [7] | No Space Left On Device |      | Let's free up some space on a disk drive.                                                |
-|  [8] | Treetop Tree House      | YES  | The first grid puzzle of 2022! Looking through a forest with trees of different heights. |
-|  [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                 |
-| [10] | Cathode-Ray Tube        | YES  | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.    |
-| [11] | Monkey in the Middle    |      | Let some monkey's play around with items and get worried about it. Modulus Arithmetics!  |
+|  Day | Title                   | Vis? | Notes                                                                                             |
+|-----:|-------------------------|------|---------------------------------------------------------------------------------------------------|
+|  [1] | Calorie Counting        |      | Chunks of calories, delimited by blank lines. Split it!                                           |
+|  [2] | Rock Paper Scissors     |      | Win against the elves by understanding a cheat sheet                                              |
+|  [3] | Rucksack Reorganization |      | A neat thing about sets and intersections                                                         |
+|  [4] | Camp Cleanup            |      | Play around with ranges and operators                                                             |
+|  [5] | Supply Stacks           | YES  | The famous tower of Hanoi with stacks of crates                                                   |
+|  [6] | Tuning Trouble          |      | String marker detection in a signal - too easy!                                                   |
+|  [7] | No Space Left On Device |      | Let's free up some space on a disk drive.                                                         |
+|  [8] | Treetop Tree House      | YES  | The first grid puzzle of 2022! Looking through a forest with trees of different heights.          |
+|  [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                          |
+| [10] | Cathode-Ray Tube        | YES  | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.             |
+| [11] | Monkey in the Middle    |      | Let some monkey's play around with items and get worried about it. Modulus Arithmetics!           |
+| [12] | Hill Climbing Algorithm |      | Ok, now we're into graph search algorithms finding the easiest path to climb to an elevated spot. |
 
 ## My logbook of 2022
 
+### [Day 12][12]: Hill Climbing Algorithm
+
+This one is an easy one - if you have a bfs search in your toolset. Simply take the delivered heights of the area, let
+your search engine find the shortest path possible obeying that steps cannot be greater than 1.
+
 ### [Day 11][11]: Monkey in the Middle
+
+Today, I was featured on JetBrains' video series of Advent of Code in Kotlin - check it
+out [here](https://youtu.be/1eBSyPe_9j0).
 
 This puzzle starts out with parsing a description about a number of Monkeys and their specific behaviour, so the first
 question here is: do I want to *model* this properly or hack my way through the puzzle? Somehow, I went modelling this
@@ -277,3 +286,5 @@ You can solve the puzzle and provide an answer using the language of your choice
 [10]: src/main/kotlin/Day10.kt
 
 [11]: src/main/kotlin/Day11.kt
+
+[12]: src/main/kotlin/Day12.kt
