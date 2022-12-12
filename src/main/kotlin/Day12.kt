@@ -4,7 +4,7 @@ import java.util.*
 class Day12 : Day(12, 2022, "Hill Climbing Algorithm") {
 
     val map = inputAsGrid
-    val p = inputAsGrid.map {
+    val heights = inputAsGrid.map {
         it.map {
             when (it) {
                 in 'a'..'z' -> it
@@ -28,7 +28,7 @@ class Day12 : Day(12, 2022, "Hill Climbing Algorithm") {
         val starts = possibleStarts.mapNotNull { lowStart ->
             val s = breadthFirstSearch(lowStart, neighborNodes = { here ->
                 Direction4.all.map { d -> here + d }
-                    .filter { it in p.area && (p[it] - p[here] <= 1) }
+                    .filter { it in heights.area && (heights[it] - heights[here] <= 1) }
             }) { it == dest }
             (s.size - 1).takeIf { s.isNotEmpty() }
         }.min()
@@ -37,14 +37,13 @@ class Day12 : Day(12, 2022, "Hill Climbing Algorithm") {
 
     private fun findPathFrom(start: Point): Stack<Point> =
         breadthFirstSearch(start, neighborNodes = { here ->
-            here.directNeighbors(area).filter { (p[it] - p[here] <= 1) }
+            here.directNeighbors(area).filter { (heights[it] - heights[here] <= 1) }
         }) { it == dest }
 
 }
 
 fun main() {
     solve<Day12>(true) {
-
         """
             Sabqponm
             abcryxxl
@@ -52,6 +51,5 @@ fun main() {
             acctuvwj
             abdefghi
         """.trimIndent() part1 31 part2 29
-
     }
 }
