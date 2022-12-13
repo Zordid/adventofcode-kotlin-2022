@@ -16,11 +16,26 @@ class MinPriorityQueueTest : StringSpec({
         minPriorityQueueOf<String>() shouldHaveSize 0
     }
 
+    "insertion works and will offer in right order" {
+        val q = minPriorityQueueOf("a" to 2, "b" to 1)
+        q.extractMin() shouldBe "b"
+        q.extractMin() shouldBe "a"
+        q.shouldBeEmpty()
+    }
+
+    "priority can be changed" {
+        val q = minPriorityQueueOf("a" to 2, "b" to 1)
+        q.insertOrUpdate("c", 99)
+        q.getPriorityOf("c") shouldBe 99
+        q.decreasePriority("c", 20)
+        q.getPriorityOf("c") shouldBe 20
+    }
+
     "insert and remove in right order works" {
 
         checkAll<List<String>> { arbList ->
             val q = minPriorityQueueOf<String>()
-            arbList.forEach { q.insert(it, it.hashCode()) }
+            arbList.forEach { q.insertOrUpdate(it, it.hashCode()) }
 
             val sorted = arbList.distinct().sortedBy { it.hashCode() }
             q.toList() shouldBe sorted

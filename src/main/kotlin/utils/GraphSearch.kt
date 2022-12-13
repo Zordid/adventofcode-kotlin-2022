@@ -2,43 +2,42 @@ package utils
 
 import java.util.*
 
-typealias DebugHandler<N> = (level: Int, nodesOnLevel: Collection<N>, nodesVisited: Collection<N>) -> Boolean
+enum class SearchControl { STOP, CONTINUE }
+typealias DebugHandler<N> = (level: Int, nodesOnLevel: Collection<N>, nodesVisited: Collection<N>) -> SearchControl
 
 typealias SolutionPredicate<N> = (node: N) -> Boolean
 
-data class AStar<N>(
-    val startNode: N,
+class AStarSearch<N>(
+    vararg startNodes: N,
     val neighborNodes: (N) -> Collection<N>,
     val cost: (N, N) -> Int,
     val costEstimation: (N, N) -> Int,
+    val onExpand: ((Result<N>) -> Unit)? = null,
 ) {
-    private val dist = mutableMapOf(startNode to 0)
-    private val prev = mutableMapOf<N, N>()
-    private val openList = minPriorityQueueOf(startNode to 0)
-    private val closedList = mutableSetOf<N>()
+    private val dist = HashMap<N, Int>().apply { startNodes.forEach { put(it, 0) } }
+    private val prev = HashMap<N, N>()
+    private val openList = minPriorityQueueOf(elements = startNodes)
+    private val closedList = HashSet<N>()
 
-    data class Result<N>(val currentNode: N?, val distanceToStart: Int?, val distance: Map<N, Int>, val prev: Map<N, N>)
+    class Result<N>(val currentNode: N?, val distanceToStart: Int?, val distance: Map<N, Int>, val prev: Map<N, N>)
 
     fun search(destNode: N, limitSteps: Int? = null): Result<N> {
 
         fun expandNode(currentNode: N) {
+            onExpand?.invoke(Result(currentNode, dist[currentNode], dist, prev))
             for (successor in neighborNodes(currentNode)) {
-                if (closedList.contains(successor))
+                if (successor in closedList)
                     continue
 
                 val tentativeDist = dist[currentNode]!! + cost(currentNode, successor)
-                if (openList.contains(successor) && tentativeDist >= dist[successor]!!)
+                if (successor in openList && tentativeDist >= dist[successor]!!)
                     continue
 
                 prev[successor] = currentNode
                 dist[successor] = tentativeDist
 
                 val f = tentativeDist + costEstimation(successor, destNode)
-                if (openList.contains(successor)) {
-                    openList.decreasePriority(successor, f)
-                } else {
-                    openList.insert(successor, f)
-                }
+                openList.insertOrUpdate(successor, f)
             }
         }
 
@@ -46,12 +45,12 @@ data class AStar<N>(
             return Result(destNode, dist[destNode], dist, prev)
 
         var steps = 0
-        while (steps++ != limitSteps && !openList.isEmpty()) {
+        while (steps++ != limitSteps && openList.isNotEmpty()) {
             val currentNode = openList.extractMin()
             if (currentNode == destNode)
                 return Result(destNode, dist[destNode], dist, prev)
 
-            closedList.add(currentNode)
+            closedList += currentNode
             expandNode(currentNode)
         }
 
@@ -59,7 +58,7 @@ data class AStar<N>(
     }
 }
 
-fun <N> AStar.Result<N>.buildStack(): Stack<N> {
+fun <N> AStarSearch.Result<N>.buildStack(): Stack<N> {
     val pathStack = Stack<N>()
     if (currentNode in distance) {
         var nodeFoundThroughPrevious: N? = currentNode
@@ -80,7 +79,7 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
         dist[startNode] = 0
         val queue = minPriorityQueueOf(startNode to 0)
 
-        while (!queue.isEmpty()) {
+        while (queue.isNotEmpty()) {
             val u = queue.extractMin()
             if (predicate(u)) {
                 return u to (dist to prev)
@@ -90,7 +89,7 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
                 if (alt < dist.getOrDefault(v, Int.MAX_VALUE)) {
                     dist[v] = alt
                     prev[v] = u
-                    queue.insert(v, alt)
+                    queue.insertOrUpdate(v, alt)
                 }
             }
         }
@@ -113,7 +112,7 @@ open class SearchEngineWithEdges<N, E>(
 
         private tailrec fun searchLevel(nodesOnLevel: Set<N>, level: Int = 0): N? {
             //println("Searching on level $level: ${nodesOnLevel.size} nodes.")
-            if (debugHandler?.invoke(level, nodesOnLevel, nodesVisited) == true)
+            if (debugHandler?.invoke(level, nodesOnLevel, nodesVisited) == SearchControl.STOP)
                 return null
             val nodesOnNextLevel = mutableSetOf<N>()
             nodesOnLevel.forEach { currentNode ->

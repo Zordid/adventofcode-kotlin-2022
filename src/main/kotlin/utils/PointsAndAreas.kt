@@ -119,6 +119,9 @@ val Area.bottom: Int get() = second.y
 fun allPointsInArea(from: Point, to: Point): Sequence<Point> =
     areaOf(from, to).allPoints()
 
+fun Iterable<Point>.withIn(area: Area) = filter { it in area }
+fun Sequence<Point>.withIn(area: Area) = filter { it in area }
+
 private val areaRegex = ".*?(\\d+)\\D+(\\d+)\\D+(\\d+)\\D+(\\d+).*".toRegex()
 
 fun areaFromString(s: String): Area? =

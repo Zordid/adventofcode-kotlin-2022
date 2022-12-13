@@ -133,6 +133,10 @@ inline fun <T> Grid<T>.getOrElse(p: Point, default: (Point) -> T): T =
     if (p.y in indices && p.x in first().indices) this[p.y][p.x]
     else default(p)
 
+fun <T> Grid<T>.getOrDefault(p: Point, default: T): T =
+    if (p.y in indices && p.x in first().indices) this[p.y][p.x]
+    else default
+
 operator fun <T> MutableGrid<T>.set(p: Point, v: T) {
     if (p.y in indices && p.x in first().indices) this[p.y][p.x] = v
     else notInGridError(p)
