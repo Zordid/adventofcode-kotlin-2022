@@ -25,9 +25,20 @@ If you are into programming, logic, maybe also a little into competition, this o
 |  [9] | Rope Bridge             | YES  | A variant of "Snake" with a rope of knots moving around.                                          |
 | [10] | Cathode-Ray Tube        | YES  | The first CPU simulation in 2022, albeit a very rudimentary one controlling a screen.             |
 | [11] | Monkey in the Middle    |      | Let some monkey's play around with items and get worried about it. Modulus Arithmetics!           |
-| [12] | Hill Climbing Algorithm |      | Ok, now we're into graph search algorithms finding the easiest path to climb to an elevated spot. |
+| [12] | Hill Climbing Algorithm | YES  | Ok, now we're into graph search algorithms finding the easiest path to climb to an elevated spot. |
+| [13] | Distress Signal         |      | Implement a signal packet comparator to filter & sort packets.                                    |
 
 ## My logbook of 2022
+
+### [Day 13][13]: Distress Signal
+
+This puzzle includes elements of recursively walking through the typical nested data structure, a packet, containing of
+elements being either integer numbers OR again a packet. On top of that, it is required to compare them according to a
+logic that is described in its full beauty...
+
+If you had the suspicion that you are implementing a comparator, then it would have been great to even in part 1 return
+a typical -1, 0 or +1 instead of just Boolean... In Kotlin, all that was needed was to make the compare function a
+proper Comparator<T> and throw a bunch of packets at it to sort them. Job done.
 
 ### [Day 12][12]: Hill Climbing Algorithm
 
@@ -288,3 +299,5 @@ You can solve the puzzle and provide an answer using the language of your choice
 [11]: src/main/kotlin/Day11.kt
 
 [12]: src/main/kotlin/Day12.kt
+
+[13]: src/main/kotlin/Day13.kt
