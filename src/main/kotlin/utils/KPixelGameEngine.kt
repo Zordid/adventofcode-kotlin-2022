@@ -383,7 +383,6 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
         val dx = x2 - x1
         val dy = y2 - y1
 
-
         if (dx == 0) { // vertical line
             if (y1 <= y2) {
                 for (y in y1.coerceAtLeast(0)..y2.coerceAtMost(screenHeight - 1))
@@ -468,6 +467,19 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
     /**
      * Draws a rectangle on the screen in the defined color using the given pattern.
      *
+     * @param upperLeft the top left coordinate of the rect to draw
+     * @param width the width of the rectangle
+     * @param height the height of the rectangle
+     * @param color the color to use
+     * @param pattern the pattern to use
+     */
+    fun drawRect(upperLeft: P, width: Int, height: Int, color: Color = Color.WHITE, pattern: Pattern = DEFAULT_PATTERN) {
+        drawRect(upperLeft.first, upperLeft.second, width, height, color, pattern)
+    }
+
+    /**
+     * Draws a rectangle on the screen in the defined color using the given pattern.
+     *
      * @param area the area of the rect to draw
      * @param color the color to use
      * @param pattern the pattern to use
@@ -507,6 +519,19 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
             p = drawLine(x, y, x + width - 1, y, color, p)
         }
         return p
+    }
+
+    /**
+     * Fills a rectangle on the screen in the defined color using the given pattern.
+     *
+     * @param upperLeft the top left coordinate of the rect to draw
+     * @param width the width of the rectangle
+     * @param height the height of the rectangle
+     * @param color the color to use
+     * @param color the color to use for fill
+     */
+    fun fillRect(upperLeft: P, width: Int, height: Int, color: Color = Color.WHITE) {
+        fillRect(upperLeft.first, upperLeft.second, width, height, color)
     }
 
     /**
@@ -1039,6 +1064,8 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
         companion object {
             val SOLID = Pattern(-1L)
             val DOTTED = Pattern(0b01010101.toByte())
+            val ONE_DOT = Pattern(0b00000001.toByte())
+            val DASHED = Pattern(0b00001111.toByte())
             val INCREASING = Pattern(0b00001111_11111011_11111101_11111101_11111011_11110111_11011110_11101101)
             val DEFAULT_PATTERN = SOLID
         }

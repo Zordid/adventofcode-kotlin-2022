@@ -99,6 +99,12 @@ fun Area.isValid(): Boolean = first.x <= second.x && first.y <= second.y
 fun Area.fixed(): Area = if (isValid()) this else areaOf(first, second)
 
 fun Area.grow(by: Int = 1): Area = upperLeft + Direction8.NORTHWEST * by to lowerRight + Direction8.SOUTHEAST * by
+fun Area.growWidth(by: Int = 1): Area = upperLeft + Direction8.WEST * by to lowerRight + Direction8.EAST * by
+fun Area.growHeight(by: Int = 1): Area = upperLeft + Direction8.NORTH * by to lowerRight + Direction8.SOUTH * by
+fun Area.growTop(by: Int = 1): Area = upperLeft + Direction8.NORTH * by to lowerRight
+fun Area.growLeft(by: Int = 1): Area = upperLeft + Direction8.WEST * by to lowerRight
+fun Area.growRight(by: Int = 1): Area = upperLeft to lowerRight + Direction8.EAST * by
+fun Area.growBottom(by: Int = 1): Area = upperLeft to lowerRight + Direction8.SOUTH * by
 fun Area.shrink(by: Int = 1): Area = upperLeft + Direction8.SOUTHEAST * by to lowerRight + Direction8.NORTHWEST * by
 fun Area.scale(by: Int): Area = upperLeft to upperLeft + (width * by - 1 to height * by - 1)
 
@@ -194,6 +200,7 @@ interface Direction {
 
 operator fun Direction.times(n: Int): Point = vector * n
 operator fun Point.plus(direction: Direction): Point = this + direction.vector
+operator fun Point.minus(direction: Direction): Point = this - direction.vector
 
 enum class Direction4(override val vector: Point) : Direction {
     NORTH(0 to -1), EAST(1 to 0), SOUTH(0 to 1), WEST(-1 to 0);
