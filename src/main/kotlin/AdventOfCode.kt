@@ -145,9 +145,13 @@ open class Day private constructor(
     val day = fqd.day
     val year = fqd.year
 
+    var logEnabled = false
+
     private val header: Unit by lazy { if (verbose) println("--- AoC $year, Day $day: $title ---\n") }
 
-    private val rawInput: List<String> by lazy { globalTestData?.split("\n") ?: AoC.getPuzzleInput(day, year) }
+    private val rawInput: List<String> by lazy {
+        globalTestData?.also { logEnabled = true }?.split("\n") ?: AoC.getPuzzleInput(day, year)
+    }
 
     // all the different ways to get your input
     val input: List<String> by lazy { rawInput.show("Raw") }
@@ -195,6 +199,10 @@ open class Day private constructor(
     open fun part1(): Any? = NotYetImplemented
 
     open fun part2(): Any? = NotYetImplemented
+
+    fun log(message: () -> Any?) {
+        if (logEnabled) println(message().takeIf { it != Unit } ?: "")
+    }
 
     fun solve(offerSubmit: Boolean) {
         header

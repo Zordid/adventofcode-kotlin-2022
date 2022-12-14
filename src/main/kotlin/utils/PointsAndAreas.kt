@@ -176,13 +176,12 @@ fun Iterable<Point>.boundingArea(): Area? {
     return (minX.x to minY.y) to (maxX.x to maxY.y)
 }
 
-fun Collection<Point>.plot(on: Char = '#', off: Char = ' '): String {
-    val area = boundingArea() ?: return ""
-    return (area.first.y..area.second.y).joinToString(System.lineSeparator()) { y ->
-        (area.first.x..area.second.x).map { x ->
-            if (Point(x, y) in this) on else off
-        }.joinToString("")
-    }
+/**
+ * Turns a list of exactly 2 Int values into a Point, useful for map(::asPoint)
+ */
+fun asPoint(l: List<Int>): Point {
+    require(l.size == 2) { "List should exactly contain 2 values for x and y, but has ${l.size} values!" }
+    return Point(l.get(0), l.get(1))
 }
 
 interface Direction {

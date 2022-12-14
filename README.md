@@ -27,8 +27,16 @@ If you are into programming, logic, maybe also a little into competition, this o
 | [11] | Monkey in the Middle    |      | Let some monkey's play around with items and get worried about it. Modulus Arithmetics!           |
 | [12] | Hill Climbing Algorithm | YES  | Ok, now we're into graph search algorithms finding the easiest path to climb to an elevated spot. |
 | [13] | Distress Signal         |      | Implement a signal packet comparator to filter & sort packets.                                    |
+| [14] | Regolith Reservoir      |      | Dropping sand into a cave and simulating its movement until rest.                                 |
 
 ## My logbook of 2022
+
+### [Day 14][14]: Regolith Reservoir
+
+Partially prepared and reminded of a water simulation a few years ago, this went okish. I was struggling to get my maps
+right from the very beginning and my toolset lacked a quick way to log a certain area of a grid quickly. As this
+happened somewhere way to the right at positions around 500 it was a bummer I was not prepared enough for that. It went
+ok, but now I would be much quicker having written purposefully built log methods for any kind of grid... ;-)
 
 ### [Day 13][13]: Distress Signal
 
@@ -301,3 +309,5 @@ You can solve the puzzle and provide an answer using the language of your choice
 [12]: src/main/kotlin/Day12.kt
 
 [13]: src/main/kotlin/Day13.kt
+
+[14]: src/main/kotlin/Day14.kt

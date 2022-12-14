@@ -116,10 +116,48 @@ fun <T, R> Grid<T>.mapValues(transform: (T) -> R): Grid<R> =
 fun <T, R> Grid<T>.mapValuesIndexed(transform: (Point, T) -> R): Grid<R> =
     mapIndexed { y, r -> r.mapIndexed { x, v -> transform(x to y, v) } }
 
-fun <T> Grid<T>.formatted(transform: (Point, T) -> String = { _, value -> "$value" }) =
-    withIndex().joinToString(System.lineSeparator()) { (y, row) ->
-        row.withIndex().joinToString("") { (x, value) -> transform(x to y, value) }
+fun <T> Grid<T>.formatted(
+    restrictArea: Area? = null,
+    filler: String = "?",
+    transform: (Point, T) -> String = { _, value -> "$value" },
+): String {
+    val area = restrictArea ?: this.area
+    area.size > 0 || return "empty grid, nothing to show"
+    return area.buildFormatted element@{ col, row ->
+        val value = this[row].getOrElse(col) { return@element filler }
+        transform(col to row, value)
     }
+}
+
+fun <T> Map<Point, T>.formatted(
+    restrictArea: Area? = null,
+    filler: Any = ' ',
+    transform: (Point, T) -> String = { _, value -> "$value" },
+): String {
+    val area = restrictArea ?: keys.boundingArea() ?: return "empty map, nothing to show"
+    return area.buildFormatted element@{ col, row ->
+        val point = col to row
+        val value = getOrElse(point) { return@element "$filler" }
+        transform(col to row, value)
+    }
+}
+
+fun Iterable<Point>.plot(restrictArea: Area?, on: String = "#", off: String = " "): String {
+    val area = restrictArea ?: boundingArea() ?: return "no points to plot"
+    return area.buildFormatted { col, row ->
+        if ((col to row) in this) on else off
+    }
+}
+
+private inline fun Area.buildFormatted(crossinline block: (col: Int, row: Int) -> CharSequence): String {
+    val area = this
+    val rowWidth = (area.top..area.bottom).maxOf { it.toString().length }
+    return (area.top..area.bottom).joinToString(System.lineSeparator(), postfix = System.lineSeparator()) { row ->
+        (area.left..area.right).joinToString("", prefix = "$row ".padStart(rowWidth + 2)) element@{ col ->
+            block(col, row)
+        }
+    }
+}
 
 operator fun <T> Grid<T>.get(p: Point): T =
     if (p.y in indices && p.x in first().indices) this[p.y][p.x]
@@ -158,4 +196,4 @@ private fun Grid<*>.notInGridError(p: Point): Nothing =
     error("Point $p not in grid of dimensions $width x $height")
 
 private fun List<String>.notInListGridError(p: Point): Nothing =
-    error("Point $p not in grid of dimensions ${firstOrNull()?.let { it.length } ?: 0} x $size")
+    error("Point $p not in grid of dimensions ${firstOrNull()?.length ?: 0} x $size")
