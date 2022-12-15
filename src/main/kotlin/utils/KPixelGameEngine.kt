@@ -131,6 +131,13 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
     private val fontSheet by lazy { createFontSheet() }
     var nTabSizeInSpaces = 8
 
+    private fun allDirty() {
+        dirtyXLow = 0
+        dirtyYLow = 0
+        dirtyXHigh = screenWidth - 1
+        dirtyYHigh = screenHeight - 1
+    }
+
     private fun resetDirty() {
         dirtyXLow = Int.MAX_VALUE
         dirtyXHigh = Int.MIN_VALUE
@@ -211,6 +218,12 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
         panel.refresh()
         updateTitle("stopped")
         while (true) Thread.sleep(10_000)
+    }
+
+    fun saveBuffer(): Array<Color> = buffer.copyOf()
+    fun restoreBuffer(restore: Array<Color>) {
+        buffer = restore.copyOf()
+        allDirty()
     }
 
     enum class PixelMode { NORMAL, MASK, ALPHA, CUSTOM }
@@ -856,10 +869,7 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
      * @param color the color to clear with
      */
     fun clear(color: Color = Color.BLACK) {
-        dirtyXLow = 0
-        dirtyYLow = 0
-        dirtyXHigh = screenWidth - 1
-        dirtyYHigh = screenHeight - 1
+        allDirty()
         buffer.fill(color)
     }
 
@@ -947,6 +957,8 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
                     Color.getHSBColor(hsb[0], hsb[1], hsb[2])
                 }
             }
+
+        infix fun Color.withAlpha(alpha: Int) = Color(red, green, blue, alpha)
 
         infix fun Color.mixedAbove(other: Color): Color {
             val a0 = alpha / 255.0f

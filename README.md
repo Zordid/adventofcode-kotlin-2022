@@ -27,8 +27,8 @@ If you are into programming, logic, maybe also a little into competition, this o
 | [11] | Monkey in the Middle    |      | Let some monkey's play around with items and get worried about it. Modulus Arithmetics!           |
 | [12] | Hill Climbing Algorithm | YES  | Ok, now we're into graph search algorithms finding the easiest path to climb to an elevated spot. |
 | [13] | Distress Signal         |      | Implement a signal packet comparator to filter & sort packets.                                    |
-| [14] | Regolith Reservoir      |      | Dropping sand into a cave and simulating its movement until rest.                                 |
-| [15] | Beacon Exclusion Zone   |      | Scanners and beacons in 2D space! Get your ranges under control...                                |
+| [14] | Regolith Reservoir      | YES  | Dropping sand into a cave and simulating its movement until rest.                                 |
+| [15] | Beacon Exclusion Zone   | YES  | Scanners and beacons in 2D space! Get your ranges under control...                                |
 
 ## My logbook of 2022
 

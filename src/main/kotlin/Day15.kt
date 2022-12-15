@@ -3,7 +3,7 @@ import kotlin.math.absoluteValue
 
 class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
 
-    private val sensorsAndBeacons = input.map { it.extractAllIntegers().chunked(2).map(::asPoint) }
+    val sensorsAndBeacons = input.map { it.extractAllIntegers().chunked(2).map(::asPoint) }
 
     override fun part1(): Int {
         val rowOfInterest = if (testInput) 10 else 2_000_000
@@ -19,6 +19,8 @@ class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
         return impossible.sumOf { it.size } - beaconsAndSensors.size
     }
 
+    lateinit var solutionPart2: Point
+
     override fun part2(): Long {
         val rangeOfInterest = if (testInput) 0..20 else 0..4_000_000
 
@@ -29,7 +31,10 @@ class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
 
             val possible = rangeOfInterest.subtract(impossible)
             if (possible.isNotEmpty())
-                possible.singleOrNull()?.let { return it.first.toLong() * 4_000_000L + l }
+                possible.singleOrNull()?.let {
+                    solutionPart2 = it.first to l
+                    return it.first.toLong() * 4_000_000L + l
+                }
         }
         error("not found")
     }
