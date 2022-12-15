@@ -146,11 +146,15 @@ open class Day private constructor(
     val year = fqd.year
 
     var logEnabled = false
+    var testInput = false
 
     private val header: Unit by lazy { if (verbose) println("--- AoC $year, Day $day: $title ---\n") }
 
     private val rawInput: List<String> by lazy {
-        globalTestData?.also { logEnabled = true }?.split("\n") ?: AoC.getPuzzleInput(day, year)
+        globalTestData?.also {
+            logEnabled = true
+            testInput = true
+        }?.split("\n") ?: AoC.getPuzzleInput(day, year)
     }
 
     // all the different ways to get your input

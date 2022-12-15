@@ -73,8 +73,8 @@ fun Point.rotateRight90(times: Int = 1): Point = when (times.mod(4)) {
     else -> this
 }
 
-operator fun Point.compareTo(other: Point): Int =
-    if (y == other.y) x.compareTo(other.x) else y.compareTo(other.y)
+//operator fun Point.compareTo(other: Point): Int =
+//    if (y == other.y) x.compareTo(other.x) else y.compareTo(other.y)
 
 fun Point.toArea(): Area = this to this
 
@@ -187,7 +187,7 @@ fun Iterable<Point>.boundingArea(): Area? {
  */
 fun asPoint(l: List<Int>): Point {
     require(l.size == 2) { "List should exactly contain 2 values for x and y, but has ${l.size} values!" }
-    return Point(l.get(0), l.get(1))
+    return Point(l[0], l[1])
 }
 
 interface Direction {
