@@ -6,7 +6,7 @@ class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
     private val sensorsAndBeacons = input.map { it.extractAllIntegers().chunked(2).map(::asPoint) }
 
     override fun part1(): Int {
-        val rowOfInterest = if (testInput) 10 else 2000000
+        val rowOfInterest = if (testInput) 10 else 2_000_000
 
         val impossible = sensorsAndBeacons.mapNotNull { sb ->
             sb.scannerRangeOnRow(rowOfInterest)
@@ -16,11 +16,11 @@ class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
         val beaconsAndSensors = sensorsAndBeacons.flatten().filter { it.y == rowOfInterest }.map { it.x }.toSet()
         log { beaconsAndSensors }
 
-        return impossible.sumOf { it.last - it.first + 1 } - beaconsAndSensors.size
+        return impossible.sumOf { it.size } - beaconsAndSensors.size
     }
 
     override fun part2(): Long {
-        val rangeOfInterest = if (testInput) 0..20 else 0..4000000
+        val rangeOfInterest = if (testInput) 0..20 else 0..4_000_000
 
         for (l in rangeOfInterest) {
             val impossible = sensorsAndBeacons.mapNotNull { sb ->
@@ -28,7 +28,7 @@ class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
             }.merge()
 
             if (impossible.size > 1) {
-                return (impossible.first().last + 1L) * 4000000L + l
+                return (impossible.first().last + 1L) * 4_000_000L + l
             }
         }
         error("not found")
@@ -53,7 +53,6 @@ class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
 
 fun main() {
     solve<Day15> {
-
         """
             Sensor at x=2, y=18: closest beacon is at x=-2, y=15
             Sensor at x=9, y=16: closest beacon is at x=10, y=16

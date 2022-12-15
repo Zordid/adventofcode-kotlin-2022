@@ -2,6 +2,8 @@
 
 package utils
 
+val IntRange.size get() = (last - first + 1).coerceAtLeast(0)
+
 infix fun IntRange.overlaps(other: IntRange): Boolean {
     if (isEmpty() || other.isEmpty()) return false
     return !(this.last < other.first || this.first > other.last)
@@ -32,6 +34,7 @@ fun Iterable<IntRange>.merge(): List<IntRange> {
 /**
  * Merges non-empty [LongRange]s to a potentially shorter list of not-overlapping LongRanges.
  */
+@JvmName("mergeLongRanges")
 fun Iterable<LongRange>.merge(): List<LongRange> {
     val sorted = this.filter { !it.isEmpty() }.sortedBy { it.first }
     sorted.isNotEmpty() || return emptyList()
