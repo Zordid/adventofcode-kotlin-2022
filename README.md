@@ -28,8 +28,19 @@ If you are into programming, logic, maybe also a little into competition, this o
 | [12] | Hill Climbing Algorithm | YES  | Ok, now we're into graph search algorithms finding the easiest path to climb to an elevated spot. |
 | [13] | Distress Signal         |      | Implement a signal packet comparator to filter & sort packets.                                    |
 | [14] | Regolith Reservoir      |      | Dropping sand into a cave and simulating its movement until rest.                                 |
+| [15] | Beacon Exclusion Zone   |      | Scanners and beacons in 2D space! Get your ranges under control...                                |
 
 ## My logbook of 2022
+
+### [Day 15][15]: Beacon Exclusion Zone
+
+If a day like today starts with a headache, there's little you can do. Lost so much time on part 1, desperately trying
+to get the numbers right on the small little example - always thrown off by small details and finally in complete
+despair, wrote my logging to show the map like in the example. Took way too much time.
+
+Part 2 - as to be expected - needed to scan not only one row, but millions of them finding the only spot a beacon not
+visible to any scanner could hide. You immediately need to find an effiecient way to combine all the scanner's ranges or
+it will take hours to calculate.
 
 ### [Day 14][14]: Regolith Reservoir
 
@@ -311,3 +322,5 @@ You can solve the puzzle and provide an answer using the language of your choice
 [13]: src/main/kotlin/Day13.kt
 
 [14]: src/main/kotlin/Day14.kt
+
+[15]: src/main/kotlin/Day15.kt

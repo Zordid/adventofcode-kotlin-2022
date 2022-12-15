@@ -25,11 +25,11 @@ class Day15 : Day(15, 2022, "Beacon Exclusion Zone") {
         for (l in rangeOfInterest) {
             val impossible = sensorsAndBeacons.mapNotNull { sb ->
                 sb.scannerRangeOnRow(l)
-            }.merge()
-
-            if (impossible.size > 1) {
-                return (impossible.first().last + 1L) * 4_000_000L + l
             }
+
+            val possible = rangeOfInterest.subtract(impossible)
+            if (possible.isNotEmpty())
+                possible.singleOrNull()?.let { return it.first.toLong() * 4_000_000L + l }
         }
         error("not found")
     }
