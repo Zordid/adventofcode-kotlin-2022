@@ -1,30 +1,48 @@
 package utils
 
 import java.util.*
+import kotlin.collections.ArrayDeque
 
 enum class SearchControl { STOP, CONTINUE }
 typealias DebugHandler<N> = (level: Int, nodesOnLevel: Collection<N>, nodesVisited: Collection<N>) -> SearchControl
 
 typealias SolutionPredicate<N> = (node: N) -> Boolean
 
+data class SearchResult<N>(val currentNode: N?, val distance: Map<N, Int>, val prev: Map<N, N>) {
+    val distanceToStart: Int? = currentNode?.let { distance[it] }
+    val steps: Int? by lazy { (path.size - 1).takeIf { it >= 0 } }
+    val path by lazy { buildPath() }
+
+    private fun buildPath(): List<N> {
+        val path = ArrayDeque<N>()
+        if (currentNode in distance) {
+            var nodeFoundThroughPrevious: N? = currentNode
+            while (nodeFoundThroughPrevious != null) {
+                path.addFirst(nodeFoundThroughPrevious)
+                nodeFoundThroughPrevious = prev[nodeFoundThroughPrevious]
+            }
+        }
+        return path
+    }
+
+}
+
 class AStarSearch<N>(
     vararg startNodes: N,
     val neighborNodes: (N) -> Collection<N>,
     val cost: (N, N) -> Int,
     val costEstimation: (N, N) -> Int,
-    val onExpand: ((Result<N>) -> Unit)? = null,
+    val onExpand: ((SearchResult<N>) -> Unit)? = null,
 ) {
     private val dist = HashMap<N, Int>().apply { startNodes.forEach { put(it, 0) } }
     private val prev = HashMap<N, N>()
     private val openList = minPriorityQueueOf(elements = startNodes)
     private val closedList = HashSet<N>()
 
-    class Result<N>(val currentNode: N?, val distanceToStart: Int?, val distance: Map<N, Int>, val prev: Map<N, N>)
-
-    fun search(destNode: N, limitSteps: Int? = null): Result<N> {
+    fun search(destNode: N, limitSteps: Int? = null): SearchResult<N> {
 
         fun expandNode(currentNode: N) {
-            onExpand?.invoke(Result(currentNode, dist[currentNode], dist, prev))
+            onExpand?.invoke(SearchResult(currentNode, dist, prev))
             for (successor in neighborNodes(currentNode)) {
                 if (successor in closedList)
                     continue
@@ -42,47 +60,36 @@ class AStarSearch<N>(
         }
 
         if (destNode in dist)
-            return Result(destNode, dist[destNode], dist, prev)
+            return SearchResult(destNode, dist, prev)
 
         var steps = 0
         while (steps++ != limitSteps && openList.isNotEmpty()) {
             val currentNode = openList.extractMin()
             if (currentNode == destNode)
-                return Result(destNode, dist[destNode], dist, prev)
+                return SearchResult(destNode, dist, prev)
 
             closedList += currentNode
             expandNode(currentNode)
         }
 
-        return openList.peekOrNull().let { Result(it, dist[it], dist, prev) }
+        return SearchResult(openList.peekOrNull(), dist, prev)
     }
 }
 
-fun <N> AStarSearch.Result<N>.buildStack(): Stack<N> {
-    val pathStack = Stack<N>()
-    if (currentNode in distance) {
-        var nodeFoundThroughPrevious: N? = currentNode
-        while (nodeFoundThroughPrevious != null) {
-            pathStack.add(0, nodeFoundThroughPrevious)
-            nodeFoundThroughPrevious = prev[nodeFoundThroughPrevious]
-        }
-    }
-    return pathStack
-}
+class Dijkstra<N>(
+    val startNode: N,
+    val neighborNodes: (N) -> Collection<N>,
+    val cost: (N, N) -> Int,
+) {
+    private val dist = HashMap<N, Int>().apply { put(startNode, 0) }
+    private val prev = HashMap<N, N>()
+    private val queue = minPriorityQueueOf(startNode to 0)
 
-class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> Int) {
-
-    fun search(startNode: N, predicate: SolutionPredicate<N>): Pair<N?, Pair<Map<N, Int>, Map<N, N>>> {
-        val dist = mutableMapOf<N, Int>()
-        val prev = mutableMapOf<N, N>()
-
-        dist[startNode] = 0
-        val queue = minPriorityQueueOf(startNode to 0)
-
+    fun search(predicate: SolutionPredicate<N>): SearchResult<N> {
         while (queue.isNotEmpty()) {
             val u = queue.extractMin()
             if (predicate(u)) {
-                return u to (dist to prev)
+                return SearchResult(u, dist, prev)
             }
             for (v in neighborNodes(u)) {
                 val alt = dist[u]!! + cost(u, v)
@@ -94,7 +101,8 @@ class Dijkstra<N>(val neighborNodes: (N) -> Collection<N>, val cost: (N, N) -> I
             }
         }
 
-        return null to (dist to prev)
+        // failed search
+        return SearchResult(null, dist, prev)
     }
 
 }
@@ -151,7 +159,6 @@ open class SearchEngineWithEdges<N, E>(
 
     private inner class DepthSearch(val startNode: N, val isSolution: SolutionPredicate<N>) {
 
-        private val stack = Stack<N>()
         private val nodesVisited = mutableSetOf<N>()
         private val nodesDiscoveredThrough = mutableMapOf<N, N>()
 
@@ -243,7 +250,7 @@ fun <N> depthFirstSearch(
 ): Stack<N> =
     SearchEngineWithNodes(neighborNodes).depthFirstSearch(startNode, isSolution)
 
-fun loggingDebugger(level: Int, nodesOnLevel: Collection<Any>, nodesVisited: Collection<Any>): Boolean {
+fun <N> loggingDebugger(): DebugHandler<N> = { level: Int, nodesOnLevel: Collection<N>, nodesVisited: Collection<N> ->
     println("I am on level $level, searching through ${nodesOnLevel.size}. Visited so far: ${nodesVisited.size}")
-    return false
+    SearchControl.CONTINUE
 }

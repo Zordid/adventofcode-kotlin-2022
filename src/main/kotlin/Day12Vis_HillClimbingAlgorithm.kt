@@ -34,7 +34,7 @@ class Day12Vis_HillClimbingAlgorithm : KPixelGameEngine("AoC in Kotlin 2022 Day 
     val aYOffset = dimensions.height + 16
     val aOffset = 0 to aYOffset
 
-    val aStarResult: AStarSearch.Result<Point>
+    val aStarResult: SearchResult<Point>
 
     val aStarTrack = buildList {
         var maxLengthFound = 0
@@ -43,7 +43,7 @@ class Day12Vis_HillClimbingAlgorithm : KPixelGameEngine("AoC in Kotlin 2022 Day 
             cost = { from, to -> 100 + (heights[from] - heights[to]).absoluteValue },
             costEstimation = { a, b -> (a manhattanDistanceTo b) * 100 },
             onExpand = {
-                val path = it.buildStack()
+                val path = it.path
                 if (path.size > maxLengthFound) {
                     add(path to it.distance.keys.toList())
                     maxLengthFound = path.size
@@ -128,7 +128,7 @@ class Day12Vis_HillClimbingAlgorithm : KPixelGameEngine("AoC in Kotlin 2022 Day 
                     visited.withIn(dimensions).forEach { draw(it + aOffset, colorsVisited[heights[it]]) }
                     trace.withIn(dimensions).forEach { on -> draw(on + aOffset, Color.CYAN) }
                 } else {
-                    val solution = aStarResult.buildStack()
+                    val solution = aStarResult.path
                     val visited = aStarResult.prev.keys
 
                     var up = 0

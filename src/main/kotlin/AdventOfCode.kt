@@ -60,13 +60,22 @@ private fun dayNumber(day: Class<out Day>) = day.simpleName.replace("Day", "").t
 
 /**
  * Dirty, but effective way to inject test data globally for one-time use only!
- * Will be reset after usage.
+ * Will be reset on first read.
  */
 var globalTestData: String? = null
     get() = field?.also {
         println("\n!!!! USING TEST DATA !!!!\n")
         field = null
     }
+
+var logEnabled = false
+fun log(message: Terminal.() -> Any?) {
+    if (logEnabled) alog(message)
+}
+
+fun alog(message: Terminal.() -> Any?) {
+    println(aocTerminal.message().takeIf { it != Unit } ?: "")
+}
 
 fun <T : Day> create(dayClass: KClass<T>): T =
     dayClass.constructors.first { it.parameters.isEmpty() }.call()
@@ -128,7 +137,7 @@ class SolveDsl<T : Day>(private val dayClass: KClass<T>) {
 }
 
 /**
- * Global flag to indicate verbosity or silence
+ * Global flag to indicate verbosity or silence when loading puzzle input
  */
 var verbose = true
 
@@ -145,7 +154,6 @@ open class Day private constructor(
     val day = fqd.day
     val year = fqd.year
 
-    var logEnabled = false
     var testInput = false
 
     private val header: Unit by lazy { if (verbose) println("--- AoC $year, Day $day: $title ---\n") }
@@ -154,7 +162,10 @@ open class Day private constructor(
         globalTestData?.also {
             logEnabled = true
             testInput = true
-        }?.split("\n") ?: AoC.getPuzzleInput(day, year)
+        }?.split("\n") ?:
+        AoC.getPuzzleInput(day, year).also {
+            logEnabled = false
+        }
     }
 
     // all the different ways to get your input
@@ -204,10 +215,6 @@ open class Day private constructor(
 
     open fun part2(): Any? = NotYetImplemented
 
-    fun log(message: () -> Any?) {
-        if (logEnabled) println(message().takeIf { it != Unit } ?: "")
-    }
-
     fun solve(offerSubmit: Boolean) {
         header
         runWithTiming("1") { part1 }
@@ -256,7 +263,8 @@ open class Day private constructor(
         }
 
     fun <T> T.show(prompt: String = "", maxLines: Int = 10): T {
-        if (!verbose) return this
+        verbose || return this
+
         header
         if (this is List<*>)
             show(prompt, maxLines)
@@ -266,9 +274,9 @@ open class Day private constructor(
     }
 
     private fun <T : Any?> List<T>.show(type: String, maxLines: Int = 10): List<T> {
-        if (!verbose) return this
-        header
+        verbose || return this
 
+        header
         with(listOfNotNull(type.takeIf { it.isNotEmpty() }, "input data").joinToString(" ")) {
             println("==== $this ${"=".repeat(50 - length - 6)}")
         }

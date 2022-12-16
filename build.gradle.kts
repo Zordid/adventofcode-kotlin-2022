@@ -24,7 +24,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("org.reflections:reflections:0.9.12")
     implementation("com.github.ajalt.mordant:mordant:2.0.0-beta7")
-    //implementation("guru.nidi:graphviz-kotlin:0.18.1")
+    implementation("guru.nidi:graphviz-kotlin:0.18.1")
     implementation("org.slf4j:slf4j-nop:2.0.5")
     //implementation("ch.qos.logback", "logback-classic", "1.2.3")
 
