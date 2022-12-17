@@ -132,10 +132,11 @@ fun <T> Grid<T>.formatted(
 fun <T> Map<Point, T>.formatted(
     restrictArea: Area? = null,
     filler: Any = ' ',
+    reverseY: Boolean = false,
     transform: (Point, T) -> String = { _, value -> "$value" },
 ): String {
     val area = restrictArea ?: keys.boundingArea() ?: return "empty map, nothing to show"
-    return area.buildFormatted element@{ col, row ->
+    return area.buildFormatted(reverseY) element@{ col, row ->
         val point = col to row
         val value = getOrElse(point) { return@element "$filler" }
         transform(col to row, value)
@@ -149,10 +150,11 @@ fun Iterable<Point>.plot(restrictArea: Area?, on: String = "#", off: String = " 
     }
 }
 
-private inline fun Area.buildFormatted(crossinline block: (col: Int, row: Int) -> CharSequence): String {
+private inline fun Area.buildFormatted(reverseY: Boolean = false, crossinline block: (col: Int, row: Int) -> CharSequence): String {
     val area = this
-    val rowWidth = (area.top..area.bottom).maxOf { it.toString().length }
-    return (area.top..area.bottom).joinToString(System.lineSeparator(), postfix = System.lineSeparator()) { row ->
+    val rowRange = if (reverseY) area.bottom downTo area.top else area.top..area.bottom
+    val rowWidth = rowRange.maxOf { it.toString().length }
+    return rowRange.joinToString(System.lineSeparator(), postfix = System.lineSeparator()) { row ->
         (area.left..area.right).joinToString("", prefix = "$row ".padStart(rowWidth + 2)) element@{ col ->
             block(col, row)
         }

@@ -6,6 +6,9 @@ class Day17 : Day(17, 2022, "Pyroclastic Flow") {
     val cmds = inputAsString.toList()
     val rocks = ROCKS.split("\n\n").map { it.split("\n").map { it.toList() } }
 
+    override fun part1() = playTetris(2022)
+    override fun part2() = playTetris(1000000000000)
+
     fun playTetris(rocksToDrop: Long): Long {
         val bottom = "+-------+".toList()
         val empty = "+.......+".toList()
@@ -50,13 +53,13 @@ class Day17 : Day(17, 2022, "Pyroclastic Flow") {
                 commandIndex %= cmds.size
 
                 val np = if (cmd == '<') rockPos.left() else rockPos.right()
-                if (space.insertOk(rock, np))
+                if (rock.fits(space, np))
                     rockPos = np
 
-                if (space.insertOk(rock, rockPos.up()))
-                    rockPos = rockPos.up()
+                if (rock.fits(space, rockPos.fall()))
+                    rockPos = rockPos.fall()
                 else {
-                    space.insert(rock, rockPos)
+                    rock.insert(space, rockPos)
                     height = height.coerceAtLeast(rockPos.y)
                     break
                 }
@@ -66,34 +69,25 @@ class Day17 : Day(17, 2022, "Pyroclastic Flow") {
         return skippedHeight + height
     }
 
-    override fun part1() = playTetris(2022)
-    override fun part2() = playTetris(1000000000000)
+    private fun Point.fall() = up()
 
-}
+    private fun Grid<Char>.fits(space: Map<Point, Char>, pos: Point): Boolean =
+        area.allPoints().none { p ->
+             ((this[p] == '#') && (space[pos + (p.x to -p.y)] != '.'))
+        }
 
-
-private fun MutableMap<Point, Char>.insertOk(r: List<List<Char>>, i: Point): Boolean {
-//    log { "trying inserting at $i\n" + r.formatted() }
-    val ra = r.area
-    ra.forEach { p ->
-        if ((r[p] == '#') && (this[i + (p.x to -p.y)] != '.')) return false
-    }
-    return true
-}
-
-
-private fun MutableMap<Point, Char>.insert(r: List<List<Char>>, i: Point, c: Char = '#') {
-//    log { "inserting at $i\n" + r.formatted() }
-    val ra = r.area
-    ra.forEach { p ->
-        if (r[p] == '#') {
-            this[i + (p.x to -p.y)] = c
+    private fun Grid<Char>.insert(space: MutableMap<Point, Char>, pos: Point, c: Char = '#') {
+        area.forEach { p ->
+            if (this[p] == '#') {
+                space[pos + (p.x to -p.y)] = c
+            }
         }
     }
+
 }
 
 fun main() {
-    solve<Day17>(true) {
+    solve<Day17> {
         """>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>""" part1 3068 part2 1514285714288
     }
 }
