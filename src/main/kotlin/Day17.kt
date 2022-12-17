@@ -1,165 +1,100 @@
-import com.github.ajalt.mordant.animation.progressAnimation
 import utils.*
 import kotlin.collections.set
 
-typealias PointL = Pair<Long, Long>
-
-class Day17 : Day(17, 2022) {
-
-    val origin = 0L to 0L
-
+class Day17 : Day(17, 2022, "Pyroclastic Flow") {
 
     val cmds = inputAsString.toList()
-
     val rocks = ROCKS.split("\n\n").map { it.split("\n").map { it.toList() } }
 
-    override fun part2(): Any? {
+    fun playTetris(rocksToDrop: Long): Long {
+        val bottom = "+-------+".toList()
+        val empty = "+.......+".toList()
+        val space = listOf(bottom).toMapGrid().toMutableMap()
 
+        var commandIndex = 0
+        var rocksDropped = -1L
+        var height = 0
+        var skippedHeight = 0L
 
-        val space = mutableMapOf<PointL, Char>()
-        space[origin] = '+'
-        repeat(7) { space[origin.right(it + 1)] = '-' }
-        space[origin.right(8)] = '+'
-
-
-        var firstDetectionAt: Long? = null
-        var fdc: Long? = null
-        var skipped =0L
-
-        var topMost = 0L
-
-        val p = aocTerminal.progressAnimation {
-            percentage()
-            completed()
-            speed()
-            timeRemaining()
+        fun pattern(size: Int = 5) = (height downTo (height - (size - 1))).flatMap { r ->
+            (1..7).map { c -> space[c to r] }
         }
 
-        var command = 0
-        var ri = 0
+        val mem = mutableMapOf<Any, MutableMap<Pair<Int, Int>, Pair<Long, Int>>>()
 
-        var block = -1L
+        while (++rocksDropped < rocksToDrop) {
+            val rockIndex = (rocksDropped % rocks.size).toInt()
 
-        val goal = 1000000000000
-        while(++block < goal) {
-            if (block % 1000L==0L)
-            p.update(block, 1000000000000)
-            val r = rocks[ri++]
-            ri%=rocks.size
-            val h = r.size
+            val p = pattern(6)
+            val m = mem.getOrPut(p) { mutableMapOf() }
+            if ((rockIndex to commandIndex) in m) {
+                val last = m[rockIndex to commandIndex]!!
+                val rockDiff = rocksDropped - last.first
+                val heightDiff = height - last.second
+                alog { "I remember this pattern $p" }
+                alog { "loop length is $rockDiff, left rocks: ${rocksToDrop - rocksDropped}" }
+                val skipping = (rocksToDrop - rocksDropped) / rockDiff
+                rocksDropped += skipping * rockDiff
+                skippedHeight += skipping * heightDiff
+                mem.clear()
+            } else m[rockIndex to commandIndex] = rocksDropped to height
 
-//            log { "Top most $topMost" }
-            repeat(3 + h) {
-                val line = origin.up(-topMost+it+1)
-//                log { "line $line" }
-                space[line] = '|'
-                repeat(7) { l ->
-                    space[line.right(l + 1)] = '.'
-                }
-                space[line.right(8)] = '|'
+            val rock = rocks[rockIndex]
+            var rockPos = 3 to height + 3 + rock.size
+            (height + 1..rockPos.y).forEach { row ->
+                empty.forEachIndexed { i, c -> space[i to row] = c }
             }
-//            log { space.formatted() }
 
-            var elPos = 3L to topMost - 3 - h
-            require(space.insertOk(r, elPos)) { "Cannot insert at $elPos"}
-            while(true) {
-                val cmd = cmds[command++]
-                command %= cmds.size
+            while (true) {
+                val cmd = cmds[commandIndex++]
+                commandIndex %= cmds.size
 
-                val np = when(cmd) {
-                    '<' -> elPos.left()
-                    '>' -> elPos.right()
-                    else -> error(cmd.toString())
-                }
-                if (space.insertOk(r, np))
-                    elPos = np
+                val np = if (cmd == '<') rockPos.left() else rockPos.right()
+                if (space.insertOk(rock, np))
+                    rockPos = np
 
-                if (space.insertOk(r, elPos.down()))
-                    elPos = elPos.down()
+                if (space.insertOk(rock, rockPos.up()))
+                    rockPos = rockPos.up()
                 else {
-                    space.insert(r, elPos)
-                    topMost = topMost.coerceAtMost(elPos.y)
+                    space.insert(rock, rockPos)
+                    height = height.coerceAtLeast(rockPos.y)
                     break
                 }
             }
-
-//            if (block < 10)
-//                log { space.formatted() }
-
-            val cf = (topMost .. 0).firstOrNull { ft ->
-                (1..7).all { space[it.toLong() to ft] == '#' }
-
-            }
-            if (cf!=null && cf == topMost) {
-                println("Completely full line detected at command $command, rock $ri")
-                println("$topMost - full at $cf")
-
-                if (firstDetectionAt == null) {
-                    firstDetectionAt = -topMost
-                    fdc = block
-                } else {
-                    val diff = (-topMost)-firstDetectionAt
-                    val blockDiff = block-fdc!!
-                    while (block + blockDiff < goal) {
-                        block += blockDiff
-                        skipped += diff
-                    }
-                }
-
-            }
-
-            val full = (topMost .. 0).firstOrNull { ft ->
-                (1..7).all { space[it.toLong() to ft] == '#' || space[it.toLong() to ft-1] == '#'}
-
-            }
-            if (full!=null) {
-//                log{ "$block Found full line at $full \n ${space.formatted()}" }
-                space.keys.filter { it.y > full }.forEach { space.remove(it) }
-//                log { space.formatted() }
-//                log { topMost }
-            }
-
-
-
         }
 
-        return -topMost + skipped
+        return skippedHeight + height
     }
+
+    override fun part1() = playTetris(2022)
+    override fun part2() = playTetris(1000000000000)
+
 }
 
-private fun PointL.right(i: Int=1) = this.first+i to this.second
-private fun PointL.left(i: Int=1) = this.first-i  to this.second
-private fun PointL.up(i: Long=1L) = this.first to this.second-i
-private fun PointL.down(i: Int=1) = this.first to this.second+i
-val PointL.x get() = first
-val PointL.y get() = second
 
-operator fun PointL.plus(other: Point) = first+other.first to second+other.second
-
-private fun MutableMap<PointL, Char>.insertOk(r: List<List<Char>>, i: PointL): Boolean {
+private fun MutableMap<Point, Char>.insertOk(r: List<List<Char>>, i: Point): Boolean {
 //    log { "trying inserting at $i\n" + r.formatted() }
     val ra = r.area
     ra.forEach { p ->
-        if ((r[p] == '#') && (this[i + p] != '.')) return false
+        if ((r[p] == '#') && (this[i + (p.x to -p.y)] != '.')) return false
     }
     return true
 }
 
-private fun MutableMap<PointL, Char>.insert(r: List<List<Char>>, i: PointL, c: Char = '#') {
+
+private fun MutableMap<Point, Char>.insert(r: List<List<Char>>, i: Point, c: Char = '#') {
 //    log { "inserting at $i\n" + r.formatted() }
     val ra = r.area
     ra.forEach { p ->
         if (r[p] == '#') {
-            this[i + p] =  c
+            this[i + (p.x to -p.y)] = c
         }
     }
 }
 
 fun main() {
     solve<Day17>(true) {
-
-        """>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>""" part1 3068 // part2 1514285714288
-
+        """>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>""" part1 3068 part2 1514285714288
     }
 }
 

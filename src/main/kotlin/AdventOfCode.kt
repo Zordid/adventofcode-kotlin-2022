@@ -70,11 +70,11 @@ var globalTestData: String? = null
 
 var logEnabled = false
 fun log(message: Terminal.() -> Any?) {
-    if (logEnabled) alog(message)
+    if (logEnabled && verbose) alog(message)
 }
 
 fun alog(message: Terminal.() -> Any?) {
-    println(aocTerminal.message().takeIf { it != Unit } ?: "")
+    if (verbose) println(aocTerminal.message().takeIf { it != Unit } ?: "")
 }
 
 fun <T : Day> create(dayClass: KClass<T>): T =
