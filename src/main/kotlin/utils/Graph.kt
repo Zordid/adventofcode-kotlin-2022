@@ -20,6 +20,9 @@ fun <N> Graph<N>.depthFirstSearch(start: N, destination: N): Stack<N> =
 fun <N> Graph<N>.completeAcyclicTraverse(start: N) =
     SearchEngineWithNodes(::neighborsOf).completeAcyclicTraverse(start)
 
+fun <N> Graph<N>.breadthFirstSearch(start: N, predicate: SolutionPredicate<N>) =
+    SearchEngineWithNodes(::neighborsOf).bfsSearch(start, predicate)
+
 fun <N> Graph<N>.aStarSearch(
     start: N,
     destination: N,

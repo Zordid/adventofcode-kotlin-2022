@@ -1,16 +1,15 @@
 import utils.*
 import java.awt.Color
-import java.util.*
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.seconds
 
 fun main() {
-    Day12Vis_HillClimbingAlgorithm().start()
+    Day12Vis().start()
 }
 
 const val FPS = 60
 
-class Day12Vis_HillClimbingAlgorithm : KPixelGameEngine("AoC in Kotlin 2022 Day 12: Hill Climbing Algorithm") {
+class Day12Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 12: Hill Climbing Algorithm") {
 
     val day = Day12()
     val heights = Grid2D.of(day.heights)
@@ -29,7 +28,7 @@ class Day12Vis_HillClimbingAlgorithm : KPixelGameEngine("AoC in Kotlin 2022 Day 
     val e = SearchEngineWithNodes(allowedMoves)
     val hist: List<Triple<Int, Collection<Pair<Int, Int>>, Collection<Pair<Int, Int>>>>
 
-    val path: Stack<Point>
+    val path: List<Point>
 
     val aYOffset = dimensions.height + 16
     val aOffset = 0 to aYOffset
@@ -60,7 +59,7 @@ class Day12Vis_HillClimbingAlgorithm : KPixelGameEngine("AoC in Kotlin 2022 Day 
                 add(Triple(level, nodesOnLevel, nodesVisited.toList()))
                 SearchControl.CONTINUE
             }
-            path = e.bfsSearch(start) { it == dest }
+            path = e.bfsSearch(start) { it == dest }.path()
             println(path)
         }
 

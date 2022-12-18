@@ -2,6 +2,9 @@
 
 package utils
 
+import kotlin.math.max
+import kotlin.math.min
+
 /**
  * Splits elements by a defined [delimiter] predicate into groups of elements.
  *
@@ -39,6 +42,9 @@ fun <T> Iterable<T>.splitBy(limit: Int = 0, keepEmpty: Boolean = true, delimiter
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> Iterable<T?>.splitByNulls(keepEmpty: Boolean = true): List<List<T>> =
     splitBy(keepEmpty = keepEmpty) { it == null } as List<List<T>>
+
+fun Pair<Int, Int>.asRange(): IntRange = min(first, second)..max(first, second)
+fun Pair<Long, Long>.asRange(): LongRange = min(first, second)..max(first, second)
 
 /**
  * Returns the smallest and largest element or `null` if there are no elements.

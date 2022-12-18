@@ -1,49 +1,38 @@
 import utils.*
-import java.util.*
 
 class Day12 : Day(12, 2022, "Hill Climbing Algorithm") {
 
     val map = inputAsGrid
-    val heights = inputAsGrid.map {
-        it.map {
-            when (it) {
-                in 'a'..'z' -> it
-                'S' -> 'a'
-                'E' -> 'z'
-                else -> error("$it")
-            } - 'a'
-        }
+    val heights = inputAsGrid.mapValues {
+        when (it) {
+            'S' -> 'a'
+            'E' -> 'z'
+            else -> it
+        } - 'a'
     }.show()
     val area = inputAsGrid.area
     val start = inputAsGrid.searchIndices('S').single()
     val dest = inputAsGrid.searchIndices('E').single()
 
+
     override fun part1(): Int {
-        val path = findPathFrom(start)
-        return path.size - 1
+        val result = breadthFirstSearch(start,
+            { here: Point -> here.directNeighbors(area).filter { heights[it] - heights[here] <= 1 } }
+        ) { it == dest }
+        return result.path().size - 1
     }
 
     override fun part2(): Int {
-        val possibleStarts = inputAsGrid.searchIndices('a')
-        val starts = possibleStarts.mapNotNull { lowStart ->
-            val s = breadthFirstSearch(lowStart, neighborNodes = { here ->
-                Direction4.all.map { d -> here + d }
-                    .filter { it in heights.area && (heights[it] - heights[here] <= 1) }
-            }) { it == dest }
-            (s.size - 1).takeIf { s.isNotEmpty() }
-        }.min()
-        return starts
+        val result = breadthFirstSearch(dest,
+            { here -> here.directNeighbors(area).filter { heights[here] - heights[it] <= 1 } }
+        ) { heights[it] == 0 }
+        return result.path().size - 1
     }
-
-    private fun findPathFrom(start: Point): Stack<Point> =
-        breadthFirstSearch(start, neighborNodes = { here ->
-            here.directNeighbors(area).filter { (heights[it] - heights[here] <= 1) }
-        }) { it == dest }
 
 }
 
 fun main() {
-    solve<Day12>(true) {
+    solve<Day12> {
         """
             Sabqponm
             abcryxxl

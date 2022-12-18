@@ -27,7 +27,10 @@ class Day17 : Day(17, 2022, "Pyroclastic Flow") {
 
         while (++rocksDropped < rocksToDrop) {
             val rockIndex = (rocksDropped % rocks.size).toInt()
+            val rock = rocks[rockIndex]
 
+//            val necessary = rock.test(space, height)
+//            log { necessary }
             val p = pattern(6)
             val m = mem.getOrPut(p) { mutableMapOf() }
             if ((rockIndex to commandIndex) in m) {
@@ -42,7 +45,6 @@ class Day17 : Day(17, 2022, "Pyroclastic Flow") {
                 mem.clear()
             } else m[rockIndex to commandIndex] = rocksDropped to height
 
-            val rock = rocks[rockIndex]
             var rockPos = 3 to height + 3 + rock.size
             (height + 1..rockPos.y).forEach { row ->
                 empty.forEachIndexed { i, c -> space[i to row] = c }
@@ -82,6 +84,14 @@ class Day17 : Day(17, 2022, "Pyroclastic Flow") {
                 space[pos + (p.x to -p.y)] = c
             }
         }
+    }
+
+    private fun Grid<Char>.test(space: MapGrid<Char>, dropHeight: Int): Int {
+        fun neighbor(p: Point) =
+            listOf(p.fall(), p.left(), p.right()).filter { this.fits(space, it) }
+        return SearchEngineWithNodes(::neighbor).completeAcyclicTraverse(3 to dropHeight + this.size).minOf {
+            it.nodesOnLevel.minOf { it.y }
+        }-this.size
     }
 
 }

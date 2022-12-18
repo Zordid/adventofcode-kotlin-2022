@@ -9,6 +9,9 @@ package utils
 typealias Grid<T> = List<List<T>>
 typealias MutableGrid<T> = MutableList<MutableList<T>>
 
+typealias MapGrid<T> = Map<Point, T>
+typealias MutableMapGrid<T> = MutableMap<Point, T>
+
 fun <T> List<List<T>>.asGrid(): Grid<T> = this
 
 val Grid<*>.width: Int get() = firstOrNull()?.size ?: 0
@@ -107,7 +110,7 @@ fun <T> Grid<T>.transposed() =
 fun <T> Grid<T>.toMapGrid(vararg sparseElements: T): Map<Point, T> =
     toMapGrid { it in sparseElements }
 
-inline fun <T> Grid<T>.toMapGrid(sparsePredicate: (T) -> Boolean): Map<Point, T> =
+inline fun <T> Grid<T>.toMapGrid(sparsePredicate: (T) -> Boolean): MapGrid<T> =
     buildMap { forAreaIndexed { p, v -> if (!sparsePredicate(v)) this[p] = v } }
 
 fun <T, R> Grid<T>.mapValues(transform: (T) -> R): Grid<R> =
@@ -129,7 +132,7 @@ fun <T> Grid<T>.formatted(
     }
 }
 
-fun <T> Map<Point, T>.formatted(
+fun <T> MapGrid<T>.formatted(
     restrictArea: Area? = null,
     filler: Any = ' ',
     reverseY: Boolean = false,

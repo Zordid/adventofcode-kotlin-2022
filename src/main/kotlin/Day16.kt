@@ -3,10 +3,7 @@ import guru.nidi.graphviz.attribute.Color
 import guru.nidi.graphviz.engine.Format
 import guru.nidi.graphviz.graph
 import guru.nidi.graphviz.toGraphviz
-import utils.Dijkstra
-import utils.Graph
-import utils.combinations
-import utils.completeAcyclicTraverse
+import utils.*
 import java.io.File
 
 class Day16 : Day(16, 2022, "Proboscidea Volcanium") {
@@ -54,34 +51,19 @@ class Day16 : Day(16, 2022, "Proboscidea Volcanium") {
         distances[setOf(pos, target)]?.takeIf { it < time - 1 }?.let { target to it }
     }
 
-    fun State.unreleasedFlow() = stillClosed.sumOf { vMap[it]!!.rate }
+    fun State.unreleasedFlow() = stillClosed.sumOf {
+        (vMap[it]!!.rate * (time - distances[setOf(pos, it)]!! - 1)).coerceAtLeast(0)
+    }
 
-    inner class G : Graph<State> {
+    val graph = object : Graph<State> {
         override fun neighborsOf(node: State): Collection<State> =
             node.whatCanYouDo().map { node.moveToAndOpen(it.first, it.second) }
     }
 
-    val g = G()
-
     override fun part1(): Any? {
         val initial = State(30, stillClosed = relevantValves)
-        return g.completeAcyclicTraverse(initial).maxOf { it.second.maxOf { it.totalRelease } }
+        return graph.completeAcyclicTraverse(initial).maxOf { it.nodesOnLevel.maxOf { it.totalRelease } }
     }
-
-    fun buildCluster(): Pair<Set<String>, Set<String>> {
-
-        val maxDistance = relevantValves.map { it to distances[setOf("AA", it)]!! }
-            .sortedByDescending { it.second }
-        println(maxDistance)
-
-
-        TODO()
-    }
-
-    fun State.energy(timeRem: Int) = stillClosed.sumOf {
-        vMap[it]!!.rate
-    }
-
 
     override fun part2(): Int {
         val initial = State(26, relevantValves)
@@ -100,8 +82,8 @@ class Day16 : Day(16, 2022, "Proboscidea Volcanium") {
                 val meState = initial.copy(stillClosed = me)
                 val elState = initial.copy(stillClosed = elephant)
 
-                val maxMe = g.completeAcyclicTraverse(meState).maxOf { it.second.maxOf { it.totalRelease } }
-                val maxEl = g.completeAcyclicTraverse(elState).maxOf { it.second.maxOf { it.totalRelease } }
+                val maxMe = graph.completeAcyclicTraverse(meState).maxOf { it.nodesOnLevel.maxOf { it.totalRelease } }
+                val maxEl = graph.completeAcyclicTraverse(elState).maxOf { it.nodesOnLevel.maxOf { it.totalRelease } }
 
                 log { "Me: $maxMe, elephant: $maxEl" }
                 (maxMe + maxEl) to (me to elephant)
@@ -109,13 +91,12 @@ class Day16 : Day(16, 2022, "Proboscidea Volcanium") {
             alog { "best so far: $best" }
             best
         }.maxBy { it.first }
-        println(solution)
+        alog { solution }
         return solution.first
     }
 
     fun graphViz() {
         graph("Day 16") {
-
             for (v in valves) {
                 (-v.id)[attr(
                     "label",
@@ -126,8 +107,6 @@ class Day16 : Day(16, 2022, "Proboscidea Volcanium") {
                     v.id - l
                 }
             }
-
-
         }.toGraphviz().render(Format.PNG).toFile(File("d16.png"))
     }
 }
@@ -145,6 +124,6 @@ fun main() {
             Valve HH has flow rate=22; tunnel leads to valve GG
             Valve II has flow rate=0; tunnels lead to valves AA, JJ
             Valve JJ has flow rate=21; tunnel leads to valve II
-        """.trimIndent() // part1 1651 part2 1707
+        """.trimIndent() part1 1651 part2 1707
     }
 }

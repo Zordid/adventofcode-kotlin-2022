@@ -41,8 +41,8 @@ fun main() {
     }
 }
 
-private fun getAllDayClasses(): Set<Class<out Day>> =
-    Reflections("").getSubTypesOf(Day::class.java)
+private fun getAllDayClasses(): Collection<Class<out Day>> =
+    Reflections("").getSubTypesOf(Day::class.java).filter { it.simpleName.matches(Regex("Day\\d+")) }
 
 @ExperimentalTime
 private fun Class<out Day>.execute(): Duration {

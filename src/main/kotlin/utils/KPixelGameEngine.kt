@@ -958,6 +958,9 @@ abstract class KPixelGameEngine(private val appName: String = "PixelGameEngine")
                 }
             }
 
+        fun randomBrightColor() : Color =
+            Color.getHSBColor(Random.nextDouble(1000.0).toFloat(), 1.0f, 0.5f)
+
         infix fun Color.withAlpha(alpha: Int) = Color(red, green, blue, alpha)
 
         infix fun Color.mixedAbove(other: Color): Color {

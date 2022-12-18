@@ -107,19 +107,107 @@ class Dijkstra<N>(
 
 }
 
+//class DepthSearch<N, E>(
+//    val startNode: N,
+//    private val edgesOfNode: (N) -> Iterable<E>,
+//    private val walkEdge: (N, E) -> N,
+//) {
+//    private val nodesVisited = mutableSetOf<N>(startNode)
+//    private val nodesDiscoveredThrough = mutableMapOf<N, N>()
+//
+//    fun search(predicate: SolutionPredicate<N>): SearchResult<N> {
+//        if (predicate(startNode))
+//            return SearchResult(startNode, emptyMap(), nodesDiscoveredThrough)
+//
+//        val edges = edgesOfNode(startNode)
+//        for (edge in edges) {
+//            val nextNode = walkEdge(node, edge)
+//            if (!nodesVisited.contains(nextNode)) {
+//                nodesDiscoveredThrough[nextNode] = node
+//                val found = searchFrom(nextNode, isSolution)
+//                if (found != null)
+//                    return found
+//            }
+//        }
+//        return null
+//    }
+//}
+
+interface EdgeGraph<N, E> {
+    fun edgesOfNode(node: N): Iterable<E>
+    fun walkEdge(node: N, edge: E): N
+}
+
+abstract class UninformedSearch<N, E>(val graph: EdgeGraph<N, E>) : EdgeGraph<N, E> by graph {
+
+    data class Result<N, E>(val node: N, val prev: Map<N, Pair<N, E>>, val visited: Set<N>)
+
+    fun search(start: N, destination: N) = search(start) { it == destination }
+    open fun search(start: N, solutionPredicate: SolutionPredicate<N>): Result<N, E>? =
+        traverse(start).firstOrNull { solutionPredicate(it.node) }
+
+    abstract fun traverse(start: N): Sequence<Result<N, E>>
+
+    class BFS<N, E>(graph: EdgeGraph<N, E>) : UninformedSearch<N, E>(graph) {
+        override fun traverse(start: N): Sequence<Result<N, E>> = sequence {
+            val nodesVisited = HashSet<N>()
+            val nodesDiscoveredThrough = HashMap<N, Pair<N, E>>()
+            val queue = ArrayDeque<N>()
+            queue += start
+            nodesVisited += start
+            yield(Result(start, nodesDiscoveredThrough, nodesVisited))
+            while (queue.isNotEmpty()) {
+                val currentNode = queue.removeFirst()
+                nodesVisited += currentNode
+                edgesOfNode(currentNode).forEach { edge ->
+                    val neighbor = walkEdge(currentNode, edge)
+                    if (neighbor !in nodesVisited) {
+                        nodesDiscoveredThrough[neighbor] = currentNode to edge
+                        queue.addLast(neighbor)
+                        yield(Result(neighbor, nodesDiscoveredThrough, nodesVisited))
+                    }
+                }
+            }
+        }
+    }
+
+
+}
+
+fun <N, E> SearchEngineWithEdges<N, E>.bfsSequence(startNode: N): Sequence<N> = sequence {
+    val nodesVisited = mutableSetOf<N>()
+    val nodesDiscoveredThrough = mutableMapOf<N, N>()
+    val queue = ArrayDeque<N>()
+    queue += startNode
+    yield(startNode)
+    while (queue.isNotEmpty()) {
+        val currentNode = queue.removeFirst()
+        nodesVisited += currentNode
+        edgesOfNode(currentNode).forEach { edge ->
+            val neighbor = walkEdge(currentNode, edge)
+            if (neighbor !in nodesVisited) {
+                nodesDiscoveredThrough[neighbor] = currentNode
+                queue.addLast(neighbor)
+                yield(neighbor)
+            }
+        }
+    }
+}
+
+
 open class SearchEngineWithEdges<N, E>(
-    private val edgesOfNode: (N) -> Iterable<E>,
-    private val walkEdge: (N, E) -> N,
+    val edgesOfNode: (N) -> Iterable<E>,
+    val walkEdge: (N, E) -> N,
 ) {
 
     var debugHandler: DebugHandler<N>? = null
 
-    private inner class BfsSearch(val startNode: N, val isSolution: SolutionPredicate<N>) {
-        private val nodesVisited = mutableSetOf<N>()
-        private val nodesDiscoveredThrough = mutableMapOf<N, N>()
+    inner class BfsSearch(val startNode: N, val isSolution: SolutionPredicate<N>) {
+        val solution: N?
+        val nodesVisited = mutableSetOf<N>()
+        val nodesDiscoveredThrough = mutableMapOf<N, N>()
 
         private tailrec fun searchLevel(nodesOnLevel: Set<N>, level: Int = 0): N? {
-            //println("Searching on level $level: ${nodesOnLevel.size} nodes.")
             if (debugHandler?.invoke(level, nodesOnLevel, nodesVisited) == SearchControl.STOP)
                 return null
             val nodesOnNextLevel = mutableSetOf<N>()
@@ -127,7 +215,7 @@ open class SearchEngineWithEdges<N, E>(
                 nodesVisited.add(currentNode)
                 edgesOfNode(currentNode).forEach { edge ->
                     val node = walkEdge(currentNode, edge)
-                    if (!nodesVisited.contains(node) && !nodesOnLevel.contains(node)) {
+                    if (node !in nodesVisited && node !in nodesOnLevel) {
                         nodesDiscoveredThrough[node] = currentNode
                         if (isSolution(node))
                             return node
@@ -142,18 +230,24 @@ open class SearchEngineWithEdges<N, E>(
                 searchLevel(nodesOnNextLevel, level + 1)
         }
 
-        private fun buildStack(node: N?): Stack<N> {
+        private fun buildStack(node: N?): List<N> {
             //println("Building stack for solution node $node")
-            val pathStack = Stack<N>()
+            val pathStack = ArrayDeque<N>()
             var nodeFoundThroughPrevious = node
             while (nodeFoundThroughPrevious != null) {
-                pathStack.add(0, nodeFoundThroughPrevious)
+                pathStack.addFirst(nodeFoundThroughPrevious)
                 nodeFoundThroughPrevious = nodesDiscoveredThrough[nodeFoundThroughPrevious]
             }
             return pathStack
         }
 
-        fun search() = buildStack(if (isSolution(startNode)) startNode else searchLevel(setOf(startNode)))
+        init {
+            solution = if (isSolution(startNode)) startNode else searchLevel(setOf(startNode))
+        }
+
+        fun path(): List<N> {
+            return buildStack(solution)
+        }
 
     }
 
@@ -192,38 +286,52 @@ open class SearchEngineWithEdges<N, E>(
 
         fun search() = buildStack(searchFrom(startNode, isSolution))
 
+        fun findBest(): Pair<Stack<N>, Set<N>> {
+            return buildStack(searchFrom(startNode, isSolution)) to nodesVisited
+        }
+
     }
 
-    fun bfsSearch(startNode: N, isSolution: SolutionPredicate<N>): Stack<N> {
-        return BfsSearch(startNode, isSolution).search()
-    }
+    fun bfsSearch(startNode: N, isSolution: SolutionPredicate<N>) =
+        BfsSearch(startNode, isSolution)
 
     fun depthFirstSearch(startNode: N, isSolution: SolutionPredicate<N>): Stack<N> {
         return DepthSearch(startNode, isSolution).search()
     }
 
-    fun completeAcyclicTraverse(startNode: N): Sequence<Pair<Int, Set<N>>> =
+    fun depthFirstSearchWithNodes(startNode: N, isSolution: SolutionPredicate<N>): Pair<Stack<N>, Set<N>> {
+        return DepthSearch(startNode, isSolution).findBest()
+    }
+
+    fun completeAcyclicTraverse(startNode: N): Sequence<AcyclicTraverseLevel<N>> =
         sequence {
             var nodesOnPreviousLevel: Set<N>
             var nodesOnLevel = setOf<N>()
             var nodesOnNextLevel = setOf(startNode)
             var level = 0
+
             while (nodesOnNextLevel.isNotEmpty()) {
                 nodesOnPreviousLevel = nodesOnLevel
                 nodesOnLevel = nodesOnNextLevel
-                yield(level++ to nodesOnLevel)
+                yield(AcyclicTraverseLevel(level++, nodesOnLevel, nodesOnPreviousLevel))
                 nodesOnNextLevel = mutableSetOf()
                 nodesOnLevel.forEach { node ->
-                    nodesOnNextLevel.addAll(edgesOfNode(node).map { e -> walkEdge(node, e) }
-                        .filter { neighbor ->
-                            !nodesOnPreviousLevel.contains(neighbor) &&
-                                    !nodesOnLevel.contains(neighbor)
-                        })
+                    nodesOnNextLevel.addAll(
+                        edgesOfNode(node).map { e -> walkEdge(node, e) }
+                            .filter { neighbor ->
+                                neighbor !in nodesOnLevel && neighbor !in nodesOnPreviousLevel
+                            }
+                    )
                 }
             }
         }
 
 }
+
+data class AcyclicTraverseLevel<N>(val level: Int, val nodesOnLevel: Set<N>, val nodesOnPreviousLevel: Set<N>) :
+    Collection<N> by nodesOnLevel
+
+data class SearchLevel<N>(val level: Int, val nodesOnLevel: Collection<N>, val visited: Set<N>)
 
 class SearchEngineWithNodes<N>(neighborNodes: (N) -> Collection<N>) :
     SearchEngineWithEdges<N, N>(neighborNodes, { _, edge -> edge })
@@ -240,7 +348,7 @@ fun <N> breadthFirstSearch(
     startNode: N,
     neighborNodes: (N) -> Collection<N>,
     isSolution: SolutionPredicate<N>,
-): Stack<N> =
+) =
     SearchEngineWithNodes(neighborNodes).bfsSearch(startNode, isSolution)
 
 fun <N> depthFirstSearch(

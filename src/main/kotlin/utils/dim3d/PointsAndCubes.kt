@@ -1,9 +1,11 @@
 package utils.dim3d
 
+import utils.range
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
 typealias Point3D = Triple<Int, Int, Int>
+typealias Cube = Pair<Point3D, Point3D>
 typealias Matrix3D = List<Point3D>
 
 val Point3D.x: Int get() = first
@@ -37,6 +39,16 @@ fun asPoint3D(l: List<Int>): Point3D {
     require(l.size == 3) { "List should exactly contain 3 values for x,y  and z, but has ${l.size} values!" }
     return Point3D(l[0], l[1], l[2])
 }
+
+fun Iterable<Point3D>.boundingCube(): Cube {
+    val xr = map { it.x }.range()
+    val yr = map { it.y }.range()
+    val zr = map { it.z }.range()
+    return Cube(Point3D(xr.first, yr.first, zr.first), Point3D(xr.last, yr.last, zr.last))
+}
+
+operator fun Cube.contains(p: Point3D) =
+    p.x in first.x..second.x && p.y in first.y..second.y && p.z in first.z..second.z
 
 val origin3D = Point3D(0, 0, 0)
 val unitVecX = Point3D(1, 0, 0)
