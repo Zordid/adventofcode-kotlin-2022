@@ -62,7 +62,7 @@ class Day19 : Day(19, 2022, "Not Enough Minerals") {
                 val c = clay.coerceAtMost(remainingTime * maxSpendClay - clayRobots * (remainingTime - 1))
                 val ob = obsidian.coerceAtMost(remainingTime * maxSpendObsidian - obsidianRobots * (remainingTime - 1))
 
-                listOf(o,c,ob,geode, oreRobots,clayRobots, obsidianRobots, geodeRobots)
+                listOf(o, c, ob, geode, oreRobots, clayRobots, obsidianRobots, geodeRobots)
             }
 
             seen.add(stateId) || continue
@@ -78,7 +78,8 @@ class Day19 : Day(19, 2022, "Not Enough Minerals") {
                     obsidian = obsidian + obsidianRobots,
                     geode = geode + geodeRobots,
                 )
-                if (oreRobots < maxSpendOre && ore >= bp[ORE_ROBOT_COST_ORE])
+                if (oreRobots < maxSpendOre && ore < maxSpendOre * remainingTime &&
+                    ore >= bp[ORE_ROBOT_COST_ORE])
                     queue += copy(
                         remainingTime = remainingTime - 1,
                         ore = ore + oreRobots - bp[ORE_ROBOT_COST_ORE],
@@ -87,7 +88,8 @@ class Day19 : Day(19, 2022, "Not Enough Minerals") {
                         geode = geode + geodeRobots,
                         oreRobots = oreRobots + 1,
                     )
-                if (clayRobots < maxSpendClay && ore >= bp[CLAY_ROBOT_COST_ORE])
+                if (clayRobots < maxSpendClay && clay < maxSpendClay * remainingTime &&
+                    ore >= bp[CLAY_ROBOT_COST_ORE])
                     queue += copy(
                         remainingTime = remainingTime - 1,
                         ore = ore + oreRobots - bp[CLAY_ROBOT_COST_ORE],
@@ -96,7 +98,8 @@ class Day19 : Day(19, 2022, "Not Enough Minerals") {
                         geode = geode + geodeRobots,
                         clayRobots = clayRobots + 1,
                     )
-                if (obsidianRobots < maxSpendObsidian && ore >= bp[OBSIDIAN_ROBOT_COST_ORE] && clay >= bp[OBSIDIAN_ROBOT_COST_CLAY])
+                if (obsidianRobots < maxSpendObsidian && obsidian < maxSpendObsidian &&
+                    ore >= bp[OBSIDIAN_ROBOT_COST_ORE] && clay >= bp[OBSIDIAN_ROBOT_COST_CLAY])
                     queue += copy(
                         remainingTime = remainingTime - 1,
                         ore = ore + oreRobots - bp[OBSIDIAN_ROBOT_COST_ORE],
