@@ -258,7 +258,7 @@ open class Day private constructor(
 
     private fun Any?.isPossibleAnswerOrNull(part: Part): Pair<Part, String>? =
         (part to "$this").takeIf { (_, sAnswer) ->
-            sAnswer !in listOf("null", "-1") && this != NotYetImplemented && sAnswer.length > 1 && "\n" !in sAnswer
+            sAnswer !in listOf("null", "-1", "$NotYetImplemented") && sAnswer.length > 1 && "\n" !in sAnswer
         }
 
     fun <T> T.show(prompt: String = "", maxLines: Int = 10): T {

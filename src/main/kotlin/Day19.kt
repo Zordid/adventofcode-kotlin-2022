@@ -37,7 +37,7 @@ class Day19 : Day(19, 2022, "Not Enough Minerals") {
         max
     }.product()
 
-    fun maxGeodeOpened(bp: List<Int>, time: Int): Int {
+    private fun maxGeodeOpened(bp: List<Int>, time: Int): Int {
         val maxSpendOre = listOf(
             ORE_ROBOT_COST_ORE,
             CLAY_ROBOT_COST_ORE,
@@ -51,7 +51,7 @@ class Day19 : Day(19, 2022, "Not Enough Minerals") {
         val queue = ArrayDeque<State>()
         queue.add(State(time))
 
-        val seen = mutableSetOf<Any>()
+        val seen = HashSet<Any>()
         while (queue.isNotEmpty()) {
             val state = queue.removeFirst()
             best = best.coerceAtLeast(state.geode)
