@@ -1,210 +1,56 @@
-import kotlin.math.absoluteValue
+import utils.CircularList
+import utils.CircularListElement
+import utils.toCircularList
 
-class Day20 : Day(20, 2022) {
+class Day20 : Day(20, 2022, "Grove Positioning System") {
 
     val p = inputAsLongs
 
-    data class V(val v: Long, var prev: V?, var originalNext: V?, var next: V?)
+    override fun part1(): Long {
+        val cl = p.toCircularList()
+        val originalOrder = cl.entries.toList()
 
-    override fun part1(): Any? {
-        println(p.size)
-        println(p.distinct().size)
+        cl.mix(originalOrder)
 
-        val s = p.size
-
-        val begin = V(p.first(), null, null, null)
-        var c = begin
-        p.drop(1).forEach { n ->
-            val nItem = V(n, c, null, null)
-            c.next = nItem
-            c.originalNext = nItem
-
-            c = nItem
-        }
-        c.next = begin
-        c.originalNext = begin
-
-        begin.prev = c
-        c = begin
-        repeat(s) {
-            log { "${c.prev!!.v}  -  ${c.v}  - ${c.next!!.v}" }
-            c.originalNext = c.next
-            c = c.next!!
-        }
-        repeat(s) {
-            check(c.next!!.prev!! == c) { "WTF at ${c.v}" }
-            c = c.next!!
-        }
-        repeat(s) {
-//            log {
-//                var x = c
-//                (1..s).joinToString { "${x.v}".also { x = x.next!! } }
-//            }
-
-            val v = c.v
-            val r = fuckingR(v, s)
-            repeat(s) {
-                check(c.next!!.prev!! == c)
-                c = c.next!!
-            }
-            if (r != 0L) {
-                log {
-                    var x = c
-                    (1..s).joinToString { "${x.v}".also { x = x.next!! } }
-                }
-                log {
-                    repeat(s) {
-                        check(c.next!!.prev!! == c)
-                        c = c.next!!
-                    }
-                    "Moving $v ($r) forward..."
-                }
-                var t = c
-                repeat(r.toInt()) {
-                    t = if (v > 0) t.next!! else t.prev!!
-                }
-                // detach from oldPos
-                val oldP = c.prev!!
-                val oldN = c.next!!
-                oldP.next = oldN
-                oldN.prev = oldP
-
-                val tN = t.next!!
-                t.next = c
-                c.prev = t
-
-                tN.prev = c
-                c.next = tN
-            }
-
-            c = c.originalNext!!
-        }
-        log { "Done" }
-        log {
-            var x = c
-            (1..s).joinToString { "${x.v}".also { x = x.next!! } }
-        }
-
-        while (c.v != 0L) {
-            c = c.next!!
-        }
-        val j = 1000 % s
-        repeat(j) { c = c.next!! }
-        val a1 = c.v
-        repeat(j) { c = c.next!! }
-        val a2 = c.v
-        repeat(j) { c = c.next!! }
-        val a3 = c.v
-
-        return a1 + a2 + a3
+        return cl.sumCoordinates()
     }
 
-
-
-    override fun part2(): Any? {
-
+    override fun part2(): Long {
         val key = 811589153L
-        val s = p.size
+        val cl = p.map { it * key }.toCircularList()
+        val originalOrder = cl.entries.toList()
 
-        val begin = V(p.first()*key, null, null, null)
-        var c = begin
-        p.drop(1).forEach { n ->
-            val nItem = V(n*key, c, null, null)
-            c.next = nItem
-            c.originalNext = nItem
-
-            c = nItem
+        repeat(10) {
+            cl.mix(originalOrder)
         }
-        c.next = begin
-        c.originalNext = begin
 
-        begin.prev = c
+        return cl.sumCoordinates()
+    }
 
-        repeat(s) {
-            log { "${c.prev!!.v}  -  ${c.v}  - ${c.next!!.v}" }
-            c.originalNext = c.next
-            c = c.next!!
-        }
-        repeat(10) { round->
-            c = begin
-            repeat(s) {
-                val v = c.v
-                val r = fuckingR(v, s)
-                repeat(s) {
-                    check(c.next!!.prev!! == c)
-                    c = c.next!!
-                }
-                if (r != 0L) {
-
-                    log {
-                        repeat(s) {
-                            check(c.next!!.prev!! == c)
-                            c = c.next!!
-                        }
-//                        "Moving $v ($r) forward..."
-                    }
-                    var t = c
-                    repeat(r.toInt()) {
-                        t = if (v > 0) t.next!! else t.prev!!
-                    }
-                    // detach from oldPos
-                    val oldP = c.prev!!
-                    val oldN = c.next!!
-                    oldP.next = oldN
-                    oldN.prev = oldP
-
-                    val tN = t.next!!
-                    t.next = c
-                    c.prev = t
-
-                    tN.prev = c
-                    c.next = tN
-                }
-
-                c = c.originalNext!!
+    private fun CircularList<Long>.mix(order: Iterable<CircularListElement<Long>>) =
+        order.forEach { element ->
+            val v = element.value
+            log { "Moving $element" }
+            val moves = v.mod(size - 1)
+            if (moves > 0) {
+                val target = element.forward(moves)
+                insertAfter(target, element)
             }
-            log { "Done $round" }
-            log {
-                var x = c
-                (1..s).joinToString { "${x.v}".also { x = x.next!! } }
-            }
+            log { this }
+            log { }
         }
-        while (c.v != 0L) {
-            c = c.next!!
-        }
-        val j = 1000 % s
-        repeat(j) { c = c.next!! }
-        val a1 = c.v
-        repeat(j) { c = c.next!! }
-        val a2 = c.v
-        repeat(j) { c = c.next!! }
-        val a3 = c.v
 
-        return a1 + a2 + a3
+    private fun CircularList<Long>.sumCoordinates(): Long {
+        val zero = first { it == 0L }
+        return listOf(1000, 1000, 1000).fold(zero to 0L) { (v, s), step ->
+            v.forward(step).let { it to s + it.value }
+        }.second
     }
 
 }
 
-private fun fuckingR(v: Long, s: Int) = if (v >= 0)
-    v % (s - 1)
-else
-        -v % (s-1) +1
-//    (v.absoluteValue % s + 1) % s
-
 fun main() {
-
-//    (-6..6).forEach {v->
-//        val s = 4
-//        val r = fuckingR(v.toLong(), s)
-//
-//        println("$v -> $r")
-//    }
-//    return
-//
-
-
     solve<Day20>(true) {
-
         """
             1
             2
@@ -214,6 +60,5 @@ fun main() {
             0
             4
         """.trimIndent() part1 3 part2 1623178306
-
     }
 }
