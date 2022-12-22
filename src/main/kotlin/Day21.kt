@@ -18,7 +18,6 @@ class Day21 : Day(21, 2022) {
         }
     }.show()
 
-    data class Monkey(val name: String)
 
     override fun part1(): Any? {
 
@@ -31,22 +30,39 @@ class Day21 : Day(21, 2022) {
             val keys = op.keys.toList()
             for (name in keys) {
                 val (an, o, bn) = op[name]!!
+                val v = known[name]
                 val a = known[an] ?: an.toLongOrNull()
                 val b = known[bn] ?: bn.toLongOrNull()
-                if (a != null && b != null) {
-                    known[name] = calc(a, o, b)
+                if (listOf(v, a, b).count { it != null } == 2) {
+                    if (a != null && b != null) {
+                        known[name] = calc(a, o, b)
+                    } else if (b != null && v!=null) {
+                        // <value> = a +-*/ <value>
+                        known[an] = when (o) {
+                            "+" -> calc(v, "-", b)
+                            "-" -> calc(v, "+", b)
+                            "*" -> calc(v, "/", b)
+                            "/" -> calc(v, "*", b)
+                            else -> error("")
+                        }
+                    } else if (a!=null && v!=null){
+                        // <value> = <value> +-*/ b
+                        known[bn] = when (o) {
+                            "+" -> calc (v, "-", a)
+                            "-" -> -calc(v, "-", a)
+                            "*" -> calc (v, "/", a)
+                            "/" -> calc(a, "/", v)
+                            else -> error("")
+                        }
+                    }
                     op.remove(name)
-                } else if (a != null) {
-                    op[name] = Triple(a.toString(), o, bn)
-                } else if (b != null) {
-                    op[name] = Triple(an, o, b.toString())
+                    goon = true
                 }
-                goon = true
             }
             if (!goon) {
                 log { "We are stuck!" }
 
-
+                return "error"
             }
         }
 
@@ -107,16 +123,16 @@ class Day21 : Day(21, 2022) {
 
         fun resolve(what: String, o: Triple<String, String, String>, v: Rational): Rational {
             alog { "$o = $v" }
-            o.third.toLongOrNull()?.let { va->
+            o.third.toLongOrNull()?.let { va ->
                 val na = o.first
                 val nv = calc(v, o.second.inv, va to 1)
-                alog { "==> $na = $nv"}
+                alog { "==> $na = $nv" }
                 if (what == na) return nv
 
                 val newOp = op[na]!!
                 return resolve(what, newOp, nv)
             }
-            o.first.toLongOrNull()?.let {va ->
+            o.first.toLongOrNull()?.let { va ->
                 val na = o.third
                 val nv = when (o.second) {
                     "+", "*" -> calc(v, o.second.inv, va to 1)
@@ -124,10 +140,10 @@ class Day21 : Day(21, 2022) {
                     "/" -> calc(v, o.second, va to 1).let { it.second to it.first }
                     else -> error("")
                 }
-                alog { "==> $na = $nv"}
+                alog { "==> $na = $nv" }
                 if (what == na) return nv
 
-                val newOp = op[na]?:error("missing operation for $na")
+                val newOp = op[na] ?: error("missing operation for $na")
                 return resolve(what, newOp, nv)
             }
             error("")
@@ -136,11 +152,16 @@ class Day21 : Day(21, 2022) {
         val r = resolve("humn", unknown, knownValue to 1L)
         println(r)
 
+        alog {
+            known.entries.joinToString("\n") {
+                "${it.key} = ${it.value}"
+            }
+        }
+
         return r.first / r.second
 
 
     }
-
 
 
     val String.inv
@@ -157,7 +178,7 @@ class Day21 : Day(21, 2022) {
             "+" -> a + b
             "-" -> a - b
             "*" -> a * b
-            "/" -> a / b
+            "/" -> (a / b).also { check(a % b == 0L) }
             else -> error(op)
         }
     }
