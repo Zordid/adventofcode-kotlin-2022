@@ -79,9 +79,20 @@ fun <T> Grid<T>.fixed(default: T): Grid<T> {
     }
 }
 
+/**
+ * Returns the first occurrences index coordinates or null if no such element can be found.
+ */
+fun <T> Grid<T>.indexOfOrNull(e: T): Point? = searchIndices(e).firstOrNull()
+
+/**
+ * Searches the grid from top most left point left to right, top to bottom for matching predicate.
+ */
 inline fun <T> Grid<T>.searchIndices(crossinline predicate: (T) -> Boolean): Sequence<Point> =
     area.allPoints().filter { predicate(this[it]) }
 
+/**
+ * Searches the grid from top most left point left to right, top to bottom for matching elements.
+ */
 fun <T> Grid<T>.searchIndices(vararg elements: T): Sequence<Point> =
     searchIndices { it in elements }
 
@@ -122,11 +133,13 @@ fun <T, R> Grid<T>.mapValuesIndexed(transform: (Point, T) -> R): Grid<R> =
 fun <T> Grid<T>.formatted(
     restrictArea: Area? = null,
     filler: String = "?",
+    reverseY: Boolean = false,
+    showRows: Boolean = true,
     transform: (Point, T) -> String = { _, value -> "$value" },
 ): String {
     val area = restrictArea ?: this.area
     area.size > 0 || return "empty grid, nothing to show"
-    return area.buildFormatted element@{ col, row ->
+    return area.buildFormatted(reverseY, showRows) element@{ col, row ->
         val value = this[row].getOrElse(col) { return@element filler }
         transform(col to row, value)
     }
@@ -136,10 +149,11 @@ fun <T> MapGrid<T>.formatted(
     restrictArea: Area? = null,
     filler: Any = ' ',
     reverseY: Boolean = false,
+    showRows: Boolean = true,
     transform: (Point, T) -> String = { _, value -> "$value" },
 ): String {
     val area = restrictArea ?: keys.boundingArea() ?: return "empty map, nothing to show"
-    return area.buildFormatted(reverseY) element@{ col, row ->
+    return area.buildFormatted(reverseY, showRows) element@{ col, row ->
         val point = col to row
         val value = getOrElse(point) { return@element "$filler" }
         transform(col to row, value)
@@ -153,12 +167,17 @@ fun Iterable<Point>.plot(restrictArea: Area?, on: String = "#", off: String = " 
     }
 }
 
-private inline fun Area.buildFormatted(reverseY: Boolean = false, crossinline block: (col: Int, row: Int) -> CharSequence): String {
+private inline fun Area.buildFormatted(
+    reverseY: Boolean = false,
+    showRows: Boolean = true,
+    crossinline block: (col: Int, row: Int) -> CharSequence,
+): String {
     val area = this
     val rowRange = if (reverseY) area.bottom downTo area.top else area.top..area.bottom
     val rowWidth = rowRange.maxOf { it.toString().length }
     return rowRange.joinToString(System.lineSeparator(), postfix = System.lineSeparator()) { row ->
-        (area.left..area.right).joinToString("", prefix = "$row ".padStart(rowWidth + 2)) element@{ col ->
+        val prefix = "$row ".padStart(rowWidth + 2).takeIf { showRows }.orEmpty()
+        (area.left..area.right).joinToString("", prefix = prefix) element@{ col ->
             block(col, row)
         }
     }

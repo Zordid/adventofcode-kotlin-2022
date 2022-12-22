@@ -196,14 +196,18 @@ interface Direction {
     val left: Direction
     val opposite: Direction
     val vector: Point
+    val symbol: Char
 }
 
 operator fun Direction.times(n: Int): Point = vector * n
 operator fun Point.plus(direction: Direction): Point = this + direction.vector
 operator fun Point.minus(direction: Direction): Point = this - direction.vector
 
-enum class Direction4(override val vector: Point) : Direction {
-    NORTH(0 to -1), EAST(1 to 0), SOUTH(0 to 1), WEST(-1 to 0);
+enum class Direction4(override val vector: Point, override val symbol: Char) : Direction {
+    NORTH(0 to -1, '^'),
+    EAST(1 to 0, '>'),
+    SOUTH(0 to 1, 'v'),
+    WEST(-1 to 0, '<');
 
     override val right by lazy { values()[(ordinal + 1) % values().size] }
     override val left by lazy { values()[(ordinal - 1 + values().size) % values().size] }
@@ -237,15 +241,15 @@ enum class Direction4(override val vector: Point) : Direction {
     }
 }
 
-enum class Direction8(override val vector: Point) : Direction {
-    NORTH(0 to -1),
-    NORTHEAST(1 to -1),
-    EAST(1 to 0),
-    SOUTHEAST(1 to 1),
-    SOUTH(0 to 1),
-    SOUTHWEST(-1 to 1),
-    WEST(-1 to 0),
-    NORTHWEST(-1 to -1);
+enum class Direction8(override val vector: Point, override val symbol: Char) : Direction {
+    NORTH(0 to -1, '^'),
+    NORTHEAST(1 to -1, '/'),
+    EAST(1 to 0, '>'),
+    SOUTHEAST(1 to 1, '\\'),
+    SOUTH(0 to 1, 'v'),
+    SOUTHWEST(-1 to 1, '/'),
+    WEST(-1 to 0, '<'),
+    NORTHWEST(-1 to -1, '\\');
 
     override val right by lazy { values()[(ordinal + 1).mod(values().size)] }
     override val left by lazy { values()[(ordinal - 1).mod(values().size)] }

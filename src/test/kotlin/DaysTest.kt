@@ -17,12 +17,12 @@ class DaysTest {
         test<Day09>(5619, 2376)
         test<Day10>(
             14520, """
-            |0 ###  #### ###   ##  #### ####   ## ###  
-            |1 #  #    # #  # #  #    # #       # #  # 
-            |2 #  #   #  ###  #      #  ###     # ###  
-            |3 ###   #   #  # # ##  #   #       # #  # 
-            |4 #    #    #  # #  # #    #    #  # #  # 
-            |5 #    #### ###   ### #### ####  ##  ###  
+            |###  #### ###   ##  #### ####   ## ###  
+            |#  #    # #  # #  #    # #       # #  # 
+            |#  #   #  ###  #      #  ###     # ###  
+            |###   #   #  # # ##  #   #       # #  # 
+            |#    #    #  # #  # #    #    #  # #  # 
+            |#    #### ###   ### #### ####  ##  ###  
         """.trimMargin()
         )
         test<Day11>(56350, 13954061248)
@@ -35,8 +35,8 @@ class DaysTest {
         test<Day18>(4310, 2466)
         test<Day19>(1349, 21840)
         test<Day20>(2275, 4090409331120)
-//        test<Day21>(713328, 92399285032143)
-//        test<Day22>(546724, 1346544039176841)
+        test<Day21>(121868120894282, 3582317956029)
+        test<Day22>(109094, 53324)
     }
 
 }
@@ -52,11 +52,11 @@ private class AoCTestBuilder {
         tests += listOfNotNull(
             expectedPart1?.let {
                 DynamicTest.dynamicTest("${D::class.simpleName} - Part 1")
-                { create(D::class).part1.toString() shouldBe expectedPart1.toString() }
+                { create(D::class).part1.toString().trim() shouldBe "$expectedPart1".trim() }
             },
             expectedPart2?.let {
                 DynamicTest.dynamicTest("${D::class.simpleName} - Part 2")
-                { create(D::class).part2.toString() shouldBe expectedPart2.toString() }
+                { create(D::class).part2.toString().trim() shouldBe "$expectedPart2".trim() }
             })
     }
 

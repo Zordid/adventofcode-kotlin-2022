@@ -26,6 +26,12 @@ operator fun Point3D.times(n: Int) =
 operator fun Point3D.div(n: Int) =
     Point3D(x / n, y / n, z / n)
 
+infix fun Point3D.x(other: Point3D): Point3D = Point3D(
+    second * other.third - third * other.second,
+    third * other.first - first * other.third,
+    first * other.second - second * other.first
+)
+
 val Point3D.manhattanDistance: Int
     get() = x.absoluteValue + y.absoluteValue + z.absoluteValue
 
@@ -55,9 +61,28 @@ val unitVecX = Point3D(1, 0, 0)
 val unitVecY = Point3D(0, 1, 0)
 val unitVecZ = Point3D(0, 0, 1)
 
-fun Point3D.rotateX(times: Int) = rotXM[times.mod(4)] * this
-fun Point3D.rotateY(times: Int) = rotYM[times.mod(4)] * this
-fun Point3D.rotateZ(times: Int) = rotZM[times.mod(4)] * this
+infix fun Point3D.rotateAround(u: Point3D): Point3D =
+    listOf(
+        Point3D(
+            COS_90 + u.x * u.x * (1 - COS_90),
+            u.x * u.y * (1 - COS_90) - u.z * SIN_90,
+            u.x * u.z * (1 - COS_90) + u.y * SIN_90
+        ),
+        Point3D(
+            u.y * u.x * (1 - COS_90) + u.z * SIN_90,
+            COS_90 + u.y * u.y * (1 - COS_90),
+            u.y * u.z * (1 - COS_90) - u.x * SIN_90
+        ),
+        Point3D(
+            u.z * u.x * (1 - COS_90) - u.y * SIN_90,
+            u.z * u.y * (1 - COS_90) + u.x * SIN_90,
+            COS_90 + u.z * u.z * (1 - COS_90),
+        ),
+    ) * this
+
+fun Point3D.rotateX(times: Int = 1) = rotXM[times.mod(4)] * this
+fun Point3D.rotateY(times: Int = 1) = rotYM[times.mod(4)] * this
+fun Point3D.rotateZ(times: Int = 1) = rotZM[times.mod(4)] * this
 
 operator fun Matrix3D.times(p: Point3D): Point3D =
     Point3D(

@@ -57,7 +57,7 @@ class Day10 : Day(10, 2022, "Cathode-Ray Tube") {
             }
         )
 
-        return screen.formatted()
+        return screen.formatted(showRows = false)
     }
 
 }
