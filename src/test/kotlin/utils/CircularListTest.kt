@@ -1,6 +1,5 @@
 package utils
 
-import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.should
@@ -8,8 +7,13 @@ import io.kotest.matchers.shouldBe
 
 class CircularListTest : StringSpec({
 
-    "an empty list cannot be created" {
-        shouldThrowAny { emptyList<Int>().toCircularList() }
+    "can create an empty list and add a value" {
+        val cl = emptyList<Int>().toCircularList()
+        cl.size shouldBeExactly 0
+
+        cl.insert(42)
+        cl.size shouldBeExactly 1
+        cl.toString() shouldBe "[42]"
     }
 
     "a list with one elements can be created" {
@@ -70,11 +74,12 @@ class CircularListTest : StringSpec({
         }
     }
 
-    "cannot remove last element" {
+    "can remove last element" {
         val cl = listOf(1, 2, 3).toCircularList()
         cl.remove(cl.first)
         cl.remove(cl.first)
-        shouldThrowAny { cl.remove(cl.first) }
+        cl.remove(cl.first)
+        cl.size shouldBeExactly 0
         cl.check()
     }
 
@@ -149,7 +154,7 @@ class CircularListTest : StringSpec({
 })
 
 private fun CircularList<*>.check() {
-    var c = first
+    var c = firstOrNull ?: return
 
     repeat(size) {
         check(c.next.prev == c) { "$c: next.prev != $c, but ${c.next.prev}" }

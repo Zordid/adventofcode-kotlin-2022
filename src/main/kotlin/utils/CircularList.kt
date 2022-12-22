@@ -15,32 +15,34 @@ interface CircularListElement<E> {
 
 @OptIn(ExperimentalContracts::class)
 class CircularList<E>(initial: Iterable<E>) {
-    private var _first: DLLE<E>
-    val first: CircularListElement<E> get() = _first
+    private var _first: OwnedCircularListElement<E>? = null
+    val first: CircularListElement<E> get() = _first ?: throw NoSuchElementException("")
+    val firstOrNull: CircularListElement<E>? get() = _first
 
     private var _size: Int
     val size: Int get() = _size
 
     init {
-        val iterator = initial.iterator()
-        require(iterator.hasNext()) { "Must not be empty" }
-        var c = DLLE(iterator.next(), null, null, this)
-        _first = c
-        var count = 1
-        while (iterator.hasNext()) {
+        var c: OwnedCircularListElement<E>? = null
+        var count = 0
+        for (e in initial) {
             count++
-            val n = DLLE(iterator.next(), c, null, this)
-            c.unsafeNext = n
+            val n = OwnedCircularListElement(e, c, null, this)
+            if (c == null) {
+                _first = n
+            } else
+                c.unsafeNext = n
             c = n
         }
-        c.unsafeNext = _first
-        _first.unsafePrev = c
+        c?.unsafeNext = _first
+        _first?.unsafePrev = c
         _size = count
     }
 
     fun count(): Int {
+        _first ?: return 0
         var count = 1
-        var c = _first.next
+        var c = first.next
         while (c != _first) {
             count++
             c = c.next
@@ -48,10 +50,10 @@ class CircularList<E>(initial: Iterable<E>) {
         return count
     }
 
-    private class DLLE<E>(
+    private class OwnedCircularListElement<E>(
         override val value: E,
-        var unsafePrev: DLLE<E>?,
-        var unsafeNext: DLLE<E>?,
+        var unsafePrev: OwnedCircularListElement<E>?,
+        var unsafeNext: OwnedCircularListElement<E>?,
         var owner: CircularList<E>?,
     ) : CircularListElement<E> {
         override val prev: CircularListElement<E>
@@ -67,11 +69,11 @@ class CircularList<E>(initial: Iterable<E>) {
 
     private inner class CircularIterator : Iterator<CircularListElement<E>> {
         var lastProduced: CircularListElement<E>? = null
-        override fun hasNext() = lastProduced?.next != _first
+        override fun hasNext() = size > 0 && lastProduced?.next != first
 
         override fun next(): CircularListElement<E> {
-            lastProduced?.next != _first || throw NoSuchElementException()
-            return (lastProduced?.next ?: _first).also { lastProduced = it }
+            hasNext() || throw NoSuchElementException()
+            return (lastProduced?.next ?: first).also { lastProduced = it }
         }
     }
 
@@ -82,16 +84,18 @@ class CircularList<E>(initial: Iterable<E>) {
 
     override fun toString(): String {
         return buildString {
-            var c = first
             append('[')
-            append(c)
-            c = c.next
-            repeat(size - 1) {
-                append(", ")
+            if (_first != null) {
+                var c = first
                 append(c)
                 c = c.next
+                repeat(size - 1) {
+                    append(", ")
+                    append(c)
+                    c = c.next
+                }
+                check(c == first)
             }
-            check(c == first)
             append(']')
         }
     }
@@ -99,27 +103,39 @@ class CircularList<E>(initial: Iterable<E>) {
     fun remove(element: CircularListElement<E>) {
         checkOwnership(element)
         if (element.unsafePrev == null) return
-        require(first.next != first) { "Cannot remove last element" }
         _size--
-        val prev = element.unsafePrev!!
-        val next = element.unsafeNext!!
-        prev.unsafeNext = next
-        next.unsafePrev = prev
+        if (size > 0) {
+            val prev = element.unsafePrev!!
+            val next = element.unsafeNext!!
+            prev.unsafeNext = next
+            next.unsafePrev = prev
 
-        if (element == _first) {
-            _first = element.unsafeNext!!
+            if (element == _first) {
+                _first = element.unsafeNext!!
+            }
+        } else {
+            _first = null
         }
         element.unsafePrev = null
         element.unsafeNext = null
     }
 
+    private fun OwnedCircularListElement<E>.insertBetween(
+        left: OwnedCircularListElement<E>,
+        right: OwnedCircularListElement<E>,
+    ) {
+        left.unsafeNext = this
+        this.unsafePrev = left
+        right.unsafePrev = this
+        this.unsafeNext = right
+        _size++
+    }
 
-
-    private fun checkOwnership(element: CircularListElement<E>): DLLE<E> {
+    private fun checkOwnership(element: CircularListElement<E>): OwnedCircularListElement<E> {
         contract {
-            returns() implies (element is DLLE<E>)
+            returns() implies (element is OwnedCircularListElement<E>)
         }
-        return (element as DLLE<E>).also { require(element.owner == this ) }
+        return (element as OwnedCircularListElement<E>).also { require(element.owner == this) }
     }
 
     fun swap(a: CircularListElement<E>, b: CircularListElement<E>) {
@@ -141,37 +157,29 @@ class CircularList<E>(initial: Iterable<E>) {
     }
 
     fun insertAfter(target: CircularListElement<E>, value: E) =
-        insertAfter(target, DLLE(value, null, null, this))
+        insertAfter(target, OwnedCircularListElement(value, null, null, this))
 
     fun insertAfter(target: CircularListElement<E>, element: CircularListElement<E>) {
         checkOwnership(target)
         checkOwnership(element)
         if (target.next == element) return
         require(target != element) { "Cannot insert itself after itself" }
-        if (element.unsafePrev !=null) remove(element)
+        if (element.unsafePrev != null) remove(element)
 
-        _size++
-        element.unsafePrev = target
-        element.unsafeNext = target.unsafeNext
-        target.unsafeNext = element
-        element.unsafeNext!!.unsafePrev = element
+        element.insertBetween(target, target.unsafeNext!!)
     }
 
     fun insertBefore(target: CircularListElement<E>, value: E) =
-        insertBefore(target, DLLE(value, null, null, this))
+        insertBefore(target, OwnedCircularListElement(value, null, null, this))
 
     fun insertBefore(target: CircularListElement<E>, element: CircularListElement<E>) {
         checkOwnership(target)
         checkOwnership(element)
         if (target.prev == element) return
         require(target != element) { "Cannot insert itself ($element) before itself ($target)" }
-        remove(element)
+        if (element.unsafePrev != null) remove(element)
 
-        _size++
-        element.unsafePrev = target.unsafePrev
-        element.unsafeNext = target
-        target.unsafePrev = element
-        element.unsafePrev!!.unsafeNext = element
+        element.insertBetween(target.unsafePrev!!, target)
     }
 
     fun first(predicate: (E) -> Boolean): CircularListElement<E> {
@@ -201,6 +209,18 @@ class CircularList<E>(initial: Iterable<E>) {
             if (dir > 0) { _ -> result = result.next } else { _ -> result = result.prev }
         )
         return result
+    }
+
+    fun insert(element: E) {
+        val n = OwnedCircularListElement(element, null, null, this)
+        if (size == 0) {
+            _size = 1
+            _first = n
+            n.unsafePrev = n
+            n.unsafeNext = n
+        } else {
+            insertBefore(first, n)
+        }
     }
 
 }
