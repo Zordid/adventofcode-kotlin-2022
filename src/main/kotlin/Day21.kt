@@ -5,7 +5,7 @@ import kotlin.collections.component3
 import kotlin.collections.component4
 import kotlin.collections.set
 
-class Day21 : Day(21, 2022) {
+class Day21 : Day(21, 2022, "Monkey Math") {
 
     val p = input.map {
         val n = it.substringBefore(':')
@@ -19,7 +19,7 @@ class Day21 : Day(21, 2022) {
     }.show()
 
 
-    override fun part1(): Any? {
+    override fun part1(): Long? {
 
         val known = p.filter { it.second is Long }.associate { it.first to it.second as Long }.toMutableMap()
         val op = p.filter { it.second is Triple<*, *, *> }
@@ -59,18 +59,14 @@ class Day21 : Day(21, 2022) {
                     goon = true
                 }
             }
-            if (!goon) {
-                log { "We are stuck!" }
-
-                return "error"
-            }
+            if (!goon)
+                error("We are stuck!")
         }
 
         return known["root"]
-
     }
 
-    override fun part2(): Any? {
+    override fun part2(): Long {
 
         val known = p.filter { it.second is Long }.associate { it.first to it.second as Long }.toMutableMap()
         val op = p.filter { it.second is Triple<*, *, *> }
@@ -199,8 +195,24 @@ fun calc(a: Rational, op: String, b: Rational): Rational =
     }.shorten()
 
 fun main() {
-    solve<Day21>(true) {
-
+    solve<Day21> {
+        """
+            root: pppw + sjmn
+            dbpl: 5
+            cczh: sllz + lgvd
+            zczc: 2
+            ptdq: humn - dvpt
+            dvpt: 3
+            lfqf: 4
+            humn: 5
+            ljgn: 2
+            sjmn: drzm * dbpl
+            sllz: 4
+            pppw: cczh / lfqf
+            lgvd: ljgn * ptdq
+            drzm: hmdt - zczc
+            hmdt: 32
+        """.trimIndent() part1 152 part2 301
 
     }
 }
