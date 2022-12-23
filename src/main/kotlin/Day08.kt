@@ -1,17 +1,19 @@
+import utils.*
+
 class Day08 : Day(8, 2022, "Treetop Tree House") {
 
     private val heights = input.map { it.map(Char::digitToInt) }
     private val colIndices = heights.first().indices
     private val rowIndices = heights.indices
 
-    override fun part1() = heights.allPoints().count { here ->
+    override fun part1() = heights.area.allPoints().count { here ->
         val height = heights[here]
         directions.any { d ->
             here.treesInDirection(d).all { tree -> heights[tree] < height }
         }
     }
 
-    override fun part2() = heights.allPoints().maxOf { here ->
+    override fun part2() = heights.area.allPoints().maxOf { here ->
         val height = heights[here]
         directions.map { d ->
             here.treesInDirection(d) countVisibleFrom height
@@ -31,6 +33,8 @@ class Day08 : Day(8, 2022, "Treetop Tree House") {
             ?.let { it.index + 1 }  // we found a tree of height greater or equal
             ?: count()              // no tree blocking the view, so count them all
 
+    private val directions = listOf(-1 to 0, +1 to 0, 0 to -1, 0 to +1)
+
 }
 
 fun main() {
@@ -43,18 +47,4 @@ fun main() {
             35390
         """.trimIndent()(21, 8)
     }
-}
-
-// 2D helpers:
-private typealias Point = Pair<Int, Int>
-
-private operator fun Point.plus(other: Point): Point = first + other.first to second + other.second
-private operator fun <T> List<List<T>>.get(p: Point) = this[p.second][p.first]
-
-private val directions = listOf(-1 to 0, +1 to 0, 0 to -1, 0 to +1)
-
-private fun List<List<*>>.allPoints() = sequence {
-    for (row in this@allPoints.indices)
-        for (col in this@allPoints.first().indices)
-            yield(col to row)
 }

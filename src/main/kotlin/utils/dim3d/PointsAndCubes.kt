@@ -61,6 +61,12 @@ val unitVecX = Point3D(1, 0, 0)
 val unitVecY = Point3D(0, 1, 0)
 val unitVecZ = Point3D(0, 0, 1)
 
+/**
+ * Rotate the given point around an arbitrary vector by 90 degrees.
+ * Important: the given axis vector must be a unit vector or else the length will be messed up.
+ *
+ * From: https://stackoverflow.com/a/6721649/273456
+ */
 infix fun Point3D.rotateAround(u: Point3D): Point3D =
     listOf(
         Point3D(
