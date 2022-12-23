@@ -133,13 +133,14 @@ fun <T, R> Grid<T>.mapValuesIndexed(transform: (Point, T) -> R): Grid<R> =
 fun <T> Grid<T>.formatted(
     restrictArea: Area? = null,
     filler: String = "?",
+    reverseX: Boolean = false,
     reverseY: Boolean = false,
-    showRows: Boolean = true,
+    showHeaders: Boolean = true,
     transform: (Point, T) -> String = { _, value -> "$value" },
 ): String {
     val area = restrictArea ?: this.area
     area.size > 0 || return "empty grid, nothing to show"
-    return area.buildFormatted(reverseY, showRows) element@{ col, row ->
+    return area.buildFormatted(reverseX, reverseY, showHeaders) element@{ col, row ->
         val value = this[row].getOrElse(col) { return@element filler }
         transform(col to row, value)
     }
@@ -148,36 +149,58 @@ fun <T> Grid<T>.formatted(
 fun <T> MapGrid<T>.formatted(
     restrictArea: Area? = null,
     filler: Any = ' ',
+    reverseX: Boolean = false,
     reverseY: Boolean = false,
-    showRows: Boolean = true,
+    showHeaders: Boolean = true,
     transform: (Point, T) -> String = { _, value -> "$value" },
 ): String {
     val area = restrictArea ?: keys.boundingArea() ?: return "empty map, nothing to show"
-    return area.buildFormatted(reverseY, showRows) element@{ col, row ->
+    return area.buildFormatted(reverseX, reverseY, showHeaders) element@{ col, row ->
         val point = col to row
         val value = getOrElse(point) { return@element "$filler" }
         transform(col to row, value)
     }
 }
 
-fun Iterable<Point>.plot(restrictArea: Area?, on: String = "#", off: String = " "): String {
-    val area = restrictArea ?: boundingArea() ?: return "no points to plot"
-    return area.buildFormatted { col, row ->
+fun Iterable<Point>.plot(
+    restrictArea: Area? = null, on: String = "#", off: String = " ",
+    reverseX: Boolean = false,
+    reverseY: Boolean = false,
+    showHeaders: Boolean = true,
+): String {
+    val area = restrictArea ?: boundingArea() ?: return "this is an empty void"
+    return area.buildFormatted(reverseX, reverseY, showHeaders) { col, row ->
         if ((col to row) in this) on else off
     }
 }
 
-private inline fun Area.buildFormatted(
+private fun Area.buildFormatted(
+    reverseX: Boolean = false,
     reverseY: Boolean = false,
-    showRows: Boolean = true,
-    crossinline block: (col: Int, row: Int) -> CharSequence,
+    showHeaders: Boolean = true,
+    block: (col: Int, row: Int) -> CharSequence,
 ): String {
     val area = this
+    val colRange = if (reverseX) area.right downTo area.left else area.left..area.right
     val rowRange = if (reverseY) area.bottom downTo area.top else area.top..area.bottom
-    val rowWidth = rowRange.maxOf { it.toString().length }
-    return rowRange.joinToString(System.lineSeparator(), postfix = System.lineSeparator()) { row ->
-        val prefix = "$row ".padStart(rowWidth + 2).takeIf { showRows }.orEmpty()
-        (area.left..area.right).joinToString("", prefix = prefix) element@{ col ->
+
+    val (colPrefix, rowPrefix: (Int) -> String) = if (showHeaders) {
+        val maxColWidth = listOf(left, right).maxOf { "$it".length }
+        val maxRowWidth = listOf(top, bottom).maxOf { "$it ".length }
+        val colHeader = (0 until maxColWidth).joinToString(
+            System.lineSeparator(),
+            postfix = System.lineSeparator()
+        ) { r ->
+            (area.left..area.right step 5).joinToString("    ", prefix = " ".repeat(maxRowWidth)) { col ->
+                "$col".padStart(maxColWidth)[r].toString()
+            }
+        }
+        colHeader to { r -> "$r ".padStart(maxRowWidth) }
+    } else {
+        "" to { _: Int -> "" }
+    }
+    return rowRange.joinToString(System.lineSeparator(), prefix = colPrefix, postfix = System.lineSeparator()) { row ->
+        colRange.joinToString("", prefix = rowPrefix(row)) element@{ col ->
             block(col, row)
         }
     }

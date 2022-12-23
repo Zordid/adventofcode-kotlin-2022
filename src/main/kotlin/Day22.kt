@@ -192,7 +192,7 @@ class Day22 : Day(22, 2022, "Monkey Map") {
         override fun toString(): String {
             return """
                 |Cube Origami with face dimension $faceDimension
-                |${folding.formatted(showRows = false)}
+                |${folding.formatted(showHeaders = false)}
             """.trimMargin()
         }
 

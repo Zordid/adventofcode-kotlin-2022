@@ -1,7 +1,7 @@
 import utils.*
 import utils.Direction8.*
 
-class Day23 : Day(23, 2022) {
+class Day23 : Day(23, 2022, "Unstable Diffusion") {
 
     val p = inputAsGrid.toMapGrid('.').show()
 
