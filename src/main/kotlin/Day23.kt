@@ -5,7 +5,7 @@ class Day23 : Day(23, 2022) {
 
     val p = inputAsGrid.toMapGrid('.').show()
 
-    override fun part1(): Any? {
+    override fun part2(): Any? {
 
         var elves = p.keys
 
@@ -18,7 +18,9 @@ class Day23 : Day(23, 2022) {
 
         log { elves.plot(off = ".") }
 
-        repeat(10) {
+        var count = 0
+       while(true) {
+           count++
             check(elves.size == p.size)
 
             val propOrder = pdir.next()
@@ -41,13 +43,20 @@ class Day23 : Day(23, 2022) {
 
             val ne = mutableSetOf<Point>()
             val allprop = proposed.values.groupingBy { it }.eachCount()
+            var moved = false
             proposed.forEach { (e, p) ->
-                if (allprop[p]!! == 1)
-                    ne += p else ne += e
+                if (allprop[p]!! == 1) {
+                    ne += p
+                    moved=true
+                } else ne += e
             }
+
+           if (ne == elves) return count
             elves = ne
 
-            log { "After round ${it + 1}" }
+
+
+
             log { elves.plot(off = ".") }
         }
 
@@ -69,7 +78,7 @@ fun main() {
             #.###..
             ##.#.##
             .#..#..
-        """.trimIndent() part1 110
+        """.trimIndent() part1 110 part2 20
 
     }
 }
