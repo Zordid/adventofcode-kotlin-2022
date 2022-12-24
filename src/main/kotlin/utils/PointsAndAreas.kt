@@ -135,6 +135,7 @@ fun areaFromString(s: String): Area? =
         ?.let { (it[1].toInt() to it[2].toInt()) to (it[3].toInt() to it[4].toInt()) }
 
 fun Area.allPoints(): Sequence<Point> = sequence { forEach { yield(it) } }
+fun Area.allPointsReversed(): Sequence<Point> = sequence { forEachReversed { yield(it) } }
 fun Area.border(): Sequence<Point> = sequence { forBorder { yield(it) } }
 fun Area.corners(): Sequence<Point> =
     if (isEmpty())
@@ -145,6 +146,14 @@ fun Area.corners(): Sequence<Point> =
 inline fun Area.forEach(f: (p: Point) -> Unit) {
     for (y in first.y..second.y) {
         for (x in first.x..second.x) {
+            f(x to y)
+        }
+    }
+}
+
+inline fun Area.forEachReversed(f: (p: Point) -> Unit) {
+    for (y in second.y downTo first.y) {
+        for (x in second.x downTo first.x) {
             f(x to y)
         }
     }
