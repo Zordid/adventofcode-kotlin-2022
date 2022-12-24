@@ -19,7 +19,7 @@ class Day24Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 24: \"Blizzard Basin\"
     val h = area.height - 2
 
     override fun onCreate() {
-        construct(area.width * 3, area.height * 3, 4)
+        construct(area.width * 3, area.height * 3 + 12, 4)
         limitFps = 10
     }
 
@@ -27,7 +27,7 @@ class Day24Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 24: \"Blizzard Basin\"
 
     val hcolor = horizontal.mapValues { (_, b) ->
         b.map {
-            Color.BLUE.let {
+            Color.WHITE.let {
                 if (Random.nextBoolean())
                     it.darker() else it
             }.withAlpha(Random.nextInt(60, 100))
@@ -35,7 +35,7 @@ class Day24Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 24: \"Blizzard Basin\"
     }
     val vcolor = vertical.mapValues { (_, b) ->
         b.map {
-            Color.BLUE.let {
+            Color.WHITE.let {
                 if (Random.nextBoolean())
                     it.darker() else it
             }.withAlpha(Random.nextInt(60, 100))
@@ -46,6 +46,7 @@ class Day24Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 24: \"Blizzard Basin\"
     val topTailColor = Color.RED
     val persistTailColor = Color(213, 97, 97).darker().withAlpha(150)
     val tail = createGradient(persistTailColor, topTailColor, tailLen)
+    val textOrigin = 2 to area.height * 3 + 2
 
     val startDelay = 60
 
@@ -53,7 +54,7 @@ class Day24Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 24: \"Blizzard Basin\"
         val time = (frame.toInt() - startDelay) % (solution.size + 60)
 
         clear()
-        drawRect(1 to 1, screenWidth - 2, screenHeight - 2)
+        drawRect(1 to 1, area.width * 3 -2, area.height * 3-2, Color.GREEN)
         fillRect(start * 3, 3, 3, Color.BLACK)
         fillRect(dest * 3, 3, 3, Color.BLACK)
 
@@ -81,7 +82,10 @@ class Day24Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 24: \"Blizzard Basin\"
             }
         }
 
-        if (frame < startDelay) return
+        if (frame < startDelay) {
+            drawStringProp(textOrigin, "It's a cold, cold, blizzardy day")
+            return
+        }
 
         limitFps = if (time in 100..solution.size - 50)
             60
@@ -91,6 +95,8 @@ class Day24Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 24: \"Blizzard Basin\"
         solution.take(time).forEachIndexed { idx, p ->
             fillRect(p * 3, 3, 3, tail[(tail.lastIndex - time + idx).coerceIn(0, tail.lastIndex)])
         }
+
+        drawStringProp(textOrigin, "Path so far: ${time.coerceAtMost(solution.size)}")
     }
 
     fun part2(): List<Point> {
