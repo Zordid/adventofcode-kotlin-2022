@@ -222,7 +222,7 @@ class CubeOrigami(val paper: Grid<Char>) : Grid<Char> by paper {
             else -> error("unsupported rotation $heading to $rotHeading (x $rot)")
         }} to rotHeading)
 
-        return (base + when (rot) {
+//        return (base + when (rot) {
 //            0 -> when (heading) {
 //                DOWN -> facePos.x to 0
 //                UP -> facePos.x to last
@@ -234,21 +234,21 @@ class CubeOrigami(val paper: Grid<Char>) : Grid<Char> by paper {
 //                RIGHT -> facePos.y to last
 //                else -> error(heading)
 //            } // left
-            2 -> when (heading) {
+//            2 -> when (heading) {
 //                DOWN -> last - facePos.x to last
-                UP -> last - facePos.x to 0
+//    ***            UP -> last - facePos.x to 0
 //                RIGHT -> last to last - facePos.y
 //                else -> 0 to last - facePos.y
-            } // opposite
-            3 -> when (heading) {
+//            } // opposite
+//            3 -> when (heading) {
 //                DOWN -> last to facePos.x
 //                UP -> 0 to facePos.x
 //                RIGHT -> last - facePos.y to 0
-                else -> error("BOOM $heading")
-            } // 3x left = right
-
-            else -> error("rot == $rot")
-        } to rotHeading).also { log { "on $toFaceId we are at ${it.first} ${it.second}" } }
+//                else -> error("BOOM $heading")
+//            } // 3x left = right
+//
+//            else -> error("rot == $rot")
+//        } to rotHeading).also { log { "on $toFaceId we are at ${it.first} ${it.second}" } }
     }
 
     override fun toString(): String {
