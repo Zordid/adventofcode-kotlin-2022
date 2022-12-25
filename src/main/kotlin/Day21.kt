@@ -1,4 +1,3 @@
-import utils.gcd
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.component3
@@ -35,7 +34,7 @@ class Day21 : Day(21, 2022, "Monkey Math") {
                 if (listOf(v, a, b).count { it != null } == 2) {
                     if (a != null && b != null) {
                         known[name] = calc(a, o, b)
-                    } else if (b != null && v!=null) {
+                    } else if (b != null && v != null) {
                         // <value> = a +-*/ <value>
                         known[an] = when (o) {
                             "+" -> calc(v, "-", b)
@@ -44,12 +43,12 @@ class Day21 : Day(21, 2022, "Monkey Math") {
                             "/" -> calc(v, "*", b)
                             else -> error("")
                         }
-                    } else if (a!=null && v!=null){
+                    } else if (a != null && v != null) {
                         // <value> = <value> +-*/ b
                         known[bn] = when (o) {
-                            "+" -> calc (v, "-", a)
+                            "+" -> calc(v, "-", a)
                             "-" -> -calc(v, "-", a)
-                            "*" -> calc (v, "/", a)
+                            "*" -> calc(v, "/", a)
                             "/" -> calc(a, "/", v)
                             else -> error("")
                         }
@@ -109,37 +108,34 @@ class Day21 : Day(21, 2022, "Monkey Math") {
         val knownValue = known[r1] ?: known[r2]!!
         val unknown = op[r1] ?: op[r2]!!
 
-        fun resolve(what: String, o: Triple<String, String, String>, v: Rational): Rational {
-            alog { "$o = $v" }
-            o.third.toLongOrNull()?.let { va ->
-                val na = o.first
-                val nv = calc(v, o.second.inv, va to 1)
-                alog { "==> $na = $nv" }
-                if (what == na) return nv
-
-                val newOp = op[na]!!
-                return resolve(what, newOp, nv)
-            }
-            o.first.toLongOrNull()?.let { va ->
-                val na = o.third
-                val nv = when (o.second) {
-                    "+", "*" -> calc(v, o.second.inv, va to 1)
-                    "-" -> calc(v, o.second, va to 1).let { -it.first to it.second }
-                    "/" -> calc(v, o.second, va to 1).let { it.second to it.first }
-                    else -> error("")
+        tailrec fun resolve(resolveFor: String, term: Triple<String, String, String>, value: Long): Long {
+            alog { "$term = $value" }
+            // type "x op a = value"
+            val (x, v) = term.third.toLongOrNull()?.let { a ->
+                val x = term.first
+                val nv = calc(value, term.second.inv, a)
+                x to nv
+            } ?:
+            // type "a op x = value"
+            term.first.toLong().let { a ->
+                val x = term.third
+                val nv = when (term.second) {
+                    "+", "*" -> calc(value, term.second.inv, a)
+                    "-" -> -calc(value, term.second, a)
+                    else -> error("division not supported")
                 }
-                alog { "==> $na = $nv" }
-                if (what == na) return nv
-
-                val newOp = op[na] ?: error("missing operation for $na")
-                return resolve(what, newOp, nv)
+                x to nv
             }
-            error("")
+            alog { "==> $x = $v" }
+            if (resolveFor == x) return v
+
+            val newOp = op[x] ?: error("missing operation for $x")
+            return resolve(resolveFor, newOp, v)
         }
 
-        val r = resolve("humn", unknown, knownValue to 1L)
+        val r = resolve("humn", unknown, knownValue)
 
-        return r.first / r.second
+        return r
     }
 
     val String.inv
@@ -161,20 +157,6 @@ class Day21 : Day(21, 2022, "Monkey Math") {
         }
     }
 }
-
-private typealias Rational = Pair<Long, Long>
-
-fun Rational.shorten(): Rational =
-    gcd(first, second).let { (first / it) to (second / it) }
-
-fun calc(a: Rational, op: String, b: Rational): Rational =
-    when (op) {
-        "+" -> (a.first * b.second + b.first * a.second) to (a.second * b.second)
-        "-" -> (a.first * b.second - b.first * a.second) to (a.second * b.second)
-        "*" -> (a.first * b.first) to (a.second * b.second)
-        "/" -> (a.first * b.second) to (a.second * b.first)
-        else -> error(op)
-    }.shorten()
 
 fun main() {
     solve<Day21> {
