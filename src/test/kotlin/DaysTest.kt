@@ -39,6 +39,7 @@ class DaysTest {
         test<Day22>(109094, 53324)
         test<Day23>(4091, 1036)
         test<Day24>(305, 905)
+        test<Day25>("2-2--02=1---1200=0-1")
     }
 
 }
