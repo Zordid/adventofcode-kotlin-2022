@@ -18,13 +18,10 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.reflect.KClass
-import kotlin.time.Duration
+import kotlin.time.*
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
-import kotlin.time.toJavaDuration
 
 const val FAST_MODE = false
 
@@ -46,13 +43,19 @@ private fun getAllDayClasses(): Collection<Class<out Day>> =
 
 @ExperimentalTime
 private fun Class<out Day>.execute(): Duration {
+
+    fun TimedValue<Any?>.show(n: Int, padded: Int) {
+        val x = " ".repeat(padded) + "Part $n [$duration]: "
+        println("$x$value".trimEnd().split("\n").joinToString("\n".padEnd(x.length + 1, ' ')))
+    }
+
     val day = constructors[0].newInstance() as Day
     print("${day.day}: ${day.title}".restrictWidth(30, 30))
     val part1 = measureTimedValue { day.part1 }
-    println("Part 1 [${part1.duration}]: ${part1.value}")
-    print(" ".repeat(30))
+    part1.show(1, 0)
     val part2 = measureTimedValue { day.part2 }
-    println("Part 2 [${part2.duration}]: ${part2.value}")
+    part2.show(2, 30)
+
     return part1.duration + part2.duration
 }
 

@@ -26,7 +26,6 @@ class Day21 : Day(21, 2022, "Monkey Math") {
             .associate { it.first to it.second as Triple<String, String, String> }.toMutableMap()
 
         while ("root" !in known && op.isNotEmpty()) {
-            var goon = false
             val keys = op.keys.toList()
             for (name in keys) {
                 val (an, o, bn) = op[name]!!
@@ -56,11 +55,8 @@ class Day21 : Day(21, 2022, "Monkey Math") {
                         }
                     }
                     op.remove(name)
-                    goon = true
                 }
             }
-            if (!goon)
-                error("We are stuck!")
         }
 
         return known["root"]
@@ -108,14 +104,10 @@ class Day21 : Day(21, 2022, "Monkey Math") {
                 "(${op(a)} $o ${op(b)})"
             } ?: n
 
-        println(op(r1))
-        println(op(r2))
+        alog { "${op(r1)} = ${op(r2)}" }
 
         val knownValue = known[r1] ?: known[r2]!!
         val unknown = op[r1] ?: op[r2]!!
-        println(knownValue)
-        println(unknown)
-
 
         fun resolve(what: String, o: Triple<String, String, String>, v: Rational): Rational {
             alog { "$o = $v" }
@@ -146,19 +138,9 @@ class Day21 : Day(21, 2022, "Monkey Math") {
         }
 
         val r = resolve("humn", unknown, knownValue to 1L)
-        println(r)
-
-        alog {
-            known.entries.joinToString("\n") {
-                "${it.key} = ${it.value}"
-            }
-        }
 
         return r.first / r.second
-
-
     }
-
 
     val String.inv
         get() = when (this) {

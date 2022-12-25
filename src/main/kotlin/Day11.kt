@@ -56,7 +56,7 @@ class Day11 : Day(11, 2022, "Monkey in the Middle") {
 
     override fun part2(): Long {
         val commonModulus = monkeys.map { it.testDivisor }.lcm().toInt()
-        println("All monkeys happily live together in a modulus $commonModulus world!")
+        log { "All monkeys happily live together in a modulus $commonModulus world!" }
 
         with(ModulusPlanet(commonModulus)) {
             val totalInspections = letTheMonkeysPlay(10_000)
