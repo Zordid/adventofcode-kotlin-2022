@@ -55,6 +55,11 @@ class Day14Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 14: \"Regolith Reservo
             }
         }
 
+        val text = "Drop count: $dropCount"
+        val w = getTextSizeProp(text).x
+        fillRect(1 to 1, w +8, 8, Color.BLACK)
+        drawStringProp(1, 1, text)
+
         if (drop == null) {
             repeat(skipSand) {
                 if (map[entry] == null) {
@@ -68,7 +73,6 @@ class Day14Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 14: \"Regolith Reservo
         }
         if (map[entry] != null) {
             drawLine(entry + (0 to -10) + offset, entry + Direction4.NORTH + offset, Color.BLACK)
-            drawStringProp(1, 1, "$dropCount units!")
             stop()
         }
     }
@@ -77,7 +81,12 @@ class Day14Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 14: \"Regolith Reservo
         rocks.forEach {
             draw(it + offset, Color.LIGHT_GRAY)
         }
-        if (drawFloor) fillRect((0 to floor + offset.y), screenWidth , screenHeight-(floor+offset.y), Color.LIGHT_GRAY)
+        if (drawFloor) fillRect(
+            (0 to floor + offset.y),
+            screenWidth,
+            screenHeight - (floor + offset.y),
+            Color.LIGHT_GRAY
+        )
     }
 
     // drop sand at entry point and give the last position where it cannot go any further
