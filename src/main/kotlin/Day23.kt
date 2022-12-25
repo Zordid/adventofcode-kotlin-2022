@@ -3,114 +3,56 @@ import utils.Direction8.*
 
 class Day23 : Day(23, 2022, "Unstable Diffusion") {
 
-    val p = inputAsGrid.toMapGrid('.').show()
+    val initialState = inputAsGrid.toMapGrid('.').keys
 
-    override fun part1(): Any? {
+    val proposalStrategies = listOf(
+        listOf(NORTH, NORTHEAST, NORTHWEST),
+        listOf(SOUTH, SOUTHEAST, SOUTHWEST),
+        listOf(WEST, NORTHWEST, SOUTHWEST),
+        listOf(EAST, NORTHEAST, SOUTHEAST)
+    )
 
-        var elves = p.keys
+    fun createProposals() = proposalStrategies.asInfiniteSequence().windowed(4, 1).iterator()
 
-        var pdir = listOf(
-            listOf(NORTH, NORTHEAST, NORTHWEST),
-            listOf(SOUTH, SOUTHEAST, SOUTHWEST),
-            listOf(WEST, NORTHWEST, SOUTHWEST),
-            listOf(EAST, NORTHEAST, SOUTHEAST)
-        ).asInfiniteSequence().windowed(4, 1).iterator()
+    fun Set<Point>.move(strategy: List<List<Direction8>>): Set<Point> =
+        partition { elf -> elf.surroundingNeighbors().any { it in this } }.let { (move, stay) ->
+            move.associateWith { elf ->
+                val dir = strategy.firstOrNull { pn -> pn.none { (elf + it) in this } }
+                elf + (dir?.first()?.vector ?: origin)
+            }.let { proposals ->
+                val proposalsPerLocation = proposals.values.groupingBy { it }.eachCount()
+                proposals.entries.mapTo(HashSet()) { (elf, prop) -> if (proposalsPerLocation[prop]!! == 1) prop else elf }
+            } + stay
+        }
 
-        log { elves.plot(off = ".") }
-
+    override fun part1(): Int {
+        log { initialState.plot(off = ".") }
+        var elves = initialState
+        val proposalStrategies = createProposals()
         repeat(10) {
-            check(elves.size == p.size)
-
-            val propOrder = pdir.next()
-            log { "P order is $propOrder" }
-            val proposed = buildMap<Point, Point> {
-                elves.forEach { e ->
-                    if (e.surroundingNeighbors().any { it in elves }) {
-                        val myp = propOrder.firstOrNull { pn ->
-                            pn.none { (e + it) in elves }
-                        }
-                        if (myp != null)
-                            put(e, e + myp.first())
-                        else
-                            put(e, e)
-                    } else put(e, e)
-
-                }
-            }
-            log { proposed }
-
-            val ne = mutableSetOf<Point>()
-            val allprop = proposed.values.groupingBy { it }.eachCount()
-            proposed.forEach { (e, p) ->
-                if (allprop[p]!! == 1)
-                    ne += p else ne += e
-            }
-            elves = ne
-
+            elves = elves.move(proposalStrategies.next())
             log { "After round ${it + 1}" }
             log { elves.plot(off = ".") }
         }
         return elves.boundingArea()!!.size - elves.size
     }
 
-    override fun part2(): Any? {
-
-        var elves = p.keys
-
-        var pdir = listOf(
-            listOf(NORTH, NORTHEAST, NORTHWEST),
-            listOf(SOUTH, SOUTHEAST, SOUTHWEST),
-            listOf(WEST, NORTHWEST, SOUTHWEST),
-            listOf(EAST, NORTHEAST, SOUTHEAST)
-        ).asInfiniteSequence().windowed(4, 1).iterator()
-
-        log { elves.plot(off = ".") }
-
+    override fun part2(): Int {
+        log { initialState.plot(off = ".") }
+        var elves = initialState
+        val proposalStrategies = createProposals()
         var count = 0
-       while(true) {
-           count++
-            check(elves.size == p.size)
-
-            val propOrder = pdir.next()
-            log { "P order is $propOrder" }
-            val proposed = buildMap<Point, Point> {
-                elves.forEach { e ->
-                    if (e.surroundingNeighbors().any { it in elves }) {
-                        val myp = propOrder.firstOrNull { pn ->
-                            pn.none { (e + it) in elves }
-                        }
-                        if (myp != null)
-                            put(e, e + myp.first())
-                        else
-                            put(e, e)
-                    } else put(e,e)
-
-                }
+        while (true) {
+            count++
+            val newElves = elves.move(proposalStrategies.next())
+            if (newElves == elves) {
+                return count
             }
-            log { proposed }
-
-            val ne = mutableSetOf<Point>()
-            val allprop = proposed.values.groupingBy { it }.eachCount()
-            var moved = false
-            proposed.forEach { (e, p) ->
-                if (allprop[p]!! == 1) {
-                    ne += p
-                    moved=true
-                } else ne += e
-            }
-
-           if (ne == elves) return count
-            elves = ne
-
-
-
-
+            elves = newElves
+            log { "After round $count" }
             log { elves.plot(off = ".") }
         }
-
-        return elves.boundingArea()!!.size - elves.size
     }
-
 }
 
 fun main() {
