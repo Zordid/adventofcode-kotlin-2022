@@ -1,5 +1,6 @@
 import utils.*
 import java.awt.Color
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
 fun main() {
@@ -44,7 +45,7 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
         drawRightAligned(40, "${heightSkipped + height}")
 
         drawString(scorePos + (middle - (6 * 8) / 2 to 55), " LINES", text)
-        drawRightAligned(65, "${linesSkipped + lines.size}")
+        drawRightAligned(65, "${linesSkipped + lines}")
 
         val nextCommand = commands[commandIndex]
         drawString(scorePos + (middle - 8 to 90), "$nextCommand", text, scale = 2)
@@ -61,7 +62,7 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
         }
     }
 
-    private fun drawPlayField() {
+    private fun drawPlayField(view: IntRange, blockSize: Int = BLOCK_SIZE) {
         fillRect((origin + (1 to 0).blocks) to origin + (8 to HEIGHT).blocks, background)
         val mspace = space.toMutableMap()
         currentRock?.insert(mspace, rockPos, '0' + rockIndex)
@@ -71,9 +72,22 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
             for (col in 1..7) {
                 val r = mspace[col to row]?.digitToIntOrNull()
                 if (r in colors.indices) {
-                    fillRect(col.blocks, y, BLOCK_SIZE, BLOCK_SIZE, colors[r!!])
-                    drawRect(col.blocks + 1, y + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2, Color.GRAY)
+                    fillRect(col * blockSize, y, blockSize, blockSize, colors[r!!])
+                    if (blockSize == BLOCK_SIZE)
+                        drawRect(col * blockSize + 1, y + 1, blockSize - 2, blockSize - 2, Color.GRAY)
                 }
+            }
+            y -= blockSize
+        }
+    }
+
+    private fun drawRandomField() {
+        var y = (HEIGHT - 1).blocks
+        for (row in view) {
+            for (col in 1..7) {
+                val r = Random.nextInt(colors.lastIndex)
+                fillRect(col.blocks, y, BLOCK_SIZE, BLOCK_SIZE, colors[r])
+                drawRect(col.blocks + 1, y + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2, Color.GRAY)
             }
             y -= BLOCK_SIZE
         }
@@ -83,7 +97,7 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
     val space: MutableMapGrid<Char> = listOf(bottom).toMapGrid().toMutableMap()
     var height = 0
     var heightSkipped = 0L
-    var lines = mutableSetOf<Int>()
+    var lines = 0
     var linesSkipped = 0L
 
     val commands = AoC.getPuzzleInput(17, Event(2022)).first().toList()
@@ -98,9 +112,10 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
     var stop1 = 0
 
     override fun onUpdate(elapsedTime: Long, frame: Long) {
-        if (frame==0L) Thread.sleep(5000)
+        if (frame == 0L) Thread.sleep(5000)
         var rock = currentRock
         if (rock == null) {
+            // intermediate goal of 2022
             if (rocksDropped == 2022L) {
                 stop1++
                 when (stop1) {
@@ -132,13 +147,16 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
                 }
             }
 
+            // end goal reached
             if (rocksDropped == rocksToDrop) {
                 drawBackground()
-                drawPlayField()
+                drawPlayField(view)
                 drawScore()
                 stop()
                 return
             }
+
+            // a new drock must drop
             rock = rocks[rockIndex++]
             rockIndex %= rocks.size
 
@@ -148,49 +166,43 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
                 val last = m[rockIndex to commandIndex]!!
                 val rockDiff = rocksDropped - last.first
                 val heightDiff = height - last.second
-                val linesDiff = lines.size - last.third
+                val linesDiff = lines - last.third
                 val skipping = (rocksToDrop - rocksDropped) / rockDiff
                 rocksDropped += skipping * rockDiff
                 heightSkipped += skipping * heightDiff
                 linesSkipped += skipping * linesDiff
                 mem.clear()
-            } else m[rockIndex to commandIndex] = Triple(rocksDropped, height, lines.size)
+            } else m[rockIndex to commandIndex] = Triple(rocksDropped, height, lines)
 
             rockPos = 3 to height + 3 + rock.size
-            (height + 1..rockPos.y).forEach { row ->
-                empty.forEachIndexed { i, c -> space[i to row] = c }
-            }
             currentRock = rock
             rocksDropped++
-
-            if (view.last < rockPos.y) {
-                view = rockPos.y - HEIGHT..rockPos.y
-            }
-
-            space.keys.filter { it.y < height - 100 }.forEach { space.remove(it) }
+            sanitizeSpaceAndCheckView()
 
         } else {
             val cmd = commands[commandIndex++]
             commandIndex %= commands.size
 
+            // move it left or right
             val np = if (cmd == '<') rockPos.left() else rockPos.right()
             if (rock.fits(space, np))
                 rockPos = np
 
+            // let it fall
             if (rock.fits(space, rockPos.fall()))
                 rockPos = rockPos.fall()
             else {
                 rock.insert(space, rockPos, '0' + rockIndex)
-                val l = ((rockPos.y downTo (rockPos.y - 4).coerceAtLeast(1)).filter { r ->
-                        (1..7).all { c -> space[c to r] != '.' }
-                    })
+                val l = ((rockPos.y downTo rockPos.y - rock.size + 1).count { r ->
+                    (1..7).all { c -> space[c to r] != '.' }
+                })
                 lines += l
                 height = height.coerceAtLeast(rockPos.y)
                 currentRock = null
             }
         }
 
-        drawPlayField()
+        drawPlayField(view)
         drawScore()
 
         if (rocksDropped >= 3000) {
@@ -202,11 +214,11 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
             if (rocksDropped in 3000L..5000L)
                 textBox("This can take a while...")
             else if (rocksDropped in 5000L..7000L) {
-                val need = (((rocksToDrop-rocksDropped)/2000)*elapsedTime).milliseconds
-                textBox("This can take a while...\nE.T.A. in ${need.inWholeDays/365} years...")
-            } else if (rocksDropped in 7000 .. 7500) {
+                val need = (((rocksToDrop - rocksDropped) / 2000) * elapsedTime).milliseconds
+                textBox("This can take a while...\nReal time estimation:\n${need.inWholeDays / 365} years...")
+            } else if (rocksDropped in 7000..7500) {
                 textBox("Fast forwarding....\n>>>")
-            } else if (rocksDropped in 7500 ..8000)
+            } else if (rocksDropped in 7500..8000)
                 textBox("Fast forwarding....\n>>>\nAlmost there!")
             else
                 textBox("Fast forwarding....\n>>>\nAlmost there!\nHang in there!")
@@ -223,10 +235,23 @@ class Day17Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 17: \"Pyroclastic Flow
         }
     }
 
-    var timer : Long = 0L
+    private fun sanitizeSpaceAndCheckView() {
+        (height + 1..rockPos.y).forEach { row ->
+            empty.forEachIndexed { i, c -> space[i to row] = c }
+        }
+        space.keys.filter { it.y < height - 100 }.forEach { space.remove(it) }
+
+        if (view.last < rockPos.y) {
+            view = rockPos.y - HEIGHT..rockPos.y
+        }
+    }
+
+    var timer: Long = 0L
 
     fun textBox(s: String) {
-        fillRect(BLOCK_SIZE / 2 to 10.blocks, screenWidth - BLOCK_SIZE, 4.blocks, Color.BLACK)
+        val box = BLOCK_SIZE / 2 to 10.blocks
+        drawRect(box - (1 to 1), screenWidth - BLOCK_SIZE + 2, 4.blocks + 2, Color.WHITE)
+        fillRect(box, screenWidth - BLOCK_SIZE, 4.blocks, Color.BLACK)
         drawStringProp(BLOCK_SIZE to 10.blocks + BLOCK_SIZE / 2, s, text)
     }
 

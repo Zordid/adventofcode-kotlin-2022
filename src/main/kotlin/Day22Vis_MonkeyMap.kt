@@ -5,7 +5,7 @@ fun main() {
     Day22Vis().start()
 }
 
-class Day22Vis : KPixelGameEngine() {
+class Day22Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 22: \"Monkey Map\"") {
 
     val day22 = Day22()
 

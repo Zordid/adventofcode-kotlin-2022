@@ -12,8 +12,8 @@ const val FPS = 60
 class Day12Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 12: Hill Climbing Algorithm") {
 
     val day = Day12()
-    val heights = Grid2D.of(day.heights)
-    val dimensions = day.heights.area
+    val heights = day.heights
+    val dimensions = heights.area
 
     val allowedMoves = { here: Point ->
         here.directNeighbors(dimensions).filter { heights[it] - heights[here] <= 1 }
@@ -21,7 +21,7 @@ class Day12Vis : KPixelGameEngine("AoC in Kotlin 2022 Day 12: Hill Climbing Algo
     val start = day.start
     val dest = day.dest
 
-    val maxHeight = day.heights.flatten().max()
+    val maxHeight = heights.flatten().max()
     val colors = createGradient(Color(0, 128, 0), Color.GREEN, maxHeight + 1)
     val colorsVisited = createGradient(Color(128, 0, 0), Color.RED, maxHeight + 1)
 
